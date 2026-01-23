@@ -1,0 +1,9 @@
+
+{
+  "name": "Travel Financial Accounting System",
+  "description": "A high-end, modern dashboard for managing travel agency finances, customer settlements, and invoicing with a sophisticated search interface.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
