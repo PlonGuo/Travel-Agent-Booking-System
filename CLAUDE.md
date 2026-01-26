@@ -60,4 +60,4 @@ Renderer → IPC → Main Process → Prisma → SQLite
 
 ## Servers availability
 
-- If the OUT of the command shows undefined or some error messages, ask me to run cli instead of keeping trying.
+- If the OUTPUT of some command you ran for testing shows undefined or some error messages, ask me to run cli instead of keeping trying.

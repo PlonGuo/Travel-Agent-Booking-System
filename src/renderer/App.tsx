@@ -39,6 +39,9 @@ function App() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [categoryName, setCategoryName] = useState('')
   const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false)
+  const [searchFilterType, setSearchFilterType] = useState<'all' | 'pending'>('all')
+  const [selectedSearchCategoryId, setSelectedSearchCategoryId] = useState<string | null>(null)
+  const [dateRange, setDateRange] = useState({ start: '', end: '' })
   const searchContainerRef = useRef<HTMLDivElement>(null)
 
   const {
@@ -89,6 +92,8 @@ function App() {
   useEffect(() => {
     if (selectedCategoryId) {
       fetchCustomers(selectedCategoryId)
+      // Reset expanded customer when switching categories
+      setExpandedCustomerId(null)
     } else {
       clearCustomers()
     }
@@ -174,7 +179,7 @@ function App() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="sticky top-0 z-[100] flex items-center justify-between border-b border-gray-200 bg-white/90 backdrop-blur-md px-8 py-3">
+      <header className="sticky top-0 z-[100] flex items-center border-b border-gray-200 bg-white/90 backdrop-blur-md px-8 py-3">
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-3 text-primary">
             <div className="size-8">
@@ -183,15 +188,6 @@ function App() {
               </svg>
             </div>
             <h1 className="text-[#111318] text-xl font-bold leading-tight tracking-tight">旅游财务核算系统</h1>
-          </div>
-        </div>
-        <div className="flex items-center gap-6">
-          <div className="flex flex-col items-end">
-            <span className="text-sm font-bold text-gray-900">旅游代理</span>
-            <span className="text-xs text-gray-500">管理员</span>
-          </div>
-          <div className="size-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold ring-2 ring-gray-100">
-            管
           </div>
         </div>
       </header>
@@ -229,6 +225,9 @@ function App() {
                     onClick={() => {
                       clearSearch()
                       setIsSearchDropdownOpen(false)
+                      setSearchFilterType('all')
+                      setSelectedSearchCategoryId(null)
+                      setDateRange({ start: '', end: '' })
                     }}
                     className="flex items-center justify-center px-3 text-gray-400 hover:text-gray-600"
                   >
@@ -252,7 +251,102 @@ function App() {
 
               {/* Search Dropdown */}
               {isSearchDropdownOpen && query && (
-                <div className="absolute top-[calc(100%+0.75rem)] left-0 right-0 bg-white rounded-3xl border border-gray-200 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.15)] z-[80] overflow-hidden flex flex-col max-h-[70vh]">
+                <div className="absolute top-[calc(100%+0.75rem)] left-0 right-0 bg-white rounded-3xl border border-gray-200 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.15)] z-[80] overflow-hidden flex flex-col max-h-[85vh] animate-in slide-in-from-top-4 duration-300">
+                  {/* Filters Section */}
+                  <div className="p-6 border-b border-gray-100 space-y-6">
+                    {/* Category Filters */}
+                    <div className="space-y-3">
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                        <Search className="h-3.5 w-3.5" /> 分类筛选
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => {
+                            setSearchFilterType('all')
+                            setSelectedSearchCategoryId(null)
+                            debouncedSearch(query, {})
+                          }}
+                          className={`px-4 py-1.5 text-sm font-bold rounded-full border transition-all cursor-pointer ${
+                            searchFilterType === 'all' && !selectedSearchCategoryId
+                              ? 'bg-primary/10 text-primary border-primary/20'
+                              : 'bg-white border-gray-200 text-gray-600 hover:border-primary hover:text-primary'
+                          }`}
+                        >
+                          全部结果
+                        </button>
+                        {categories.map(cat => (
+                          <button
+                            key={cat.id}
+                            onClick={() => {
+                              setSearchFilterType('all')
+                              setSelectedSearchCategoryId(cat.id)
+                              debouncedSearch(query, { categoryId: cat.id })
+                            }}
+                            className={`px-4 py-1.5 text-sm font-medium rounded-full border transition-all cursor-pointer ${
+                              selectedSearchCategoryId === cat.id
+                                ? 'bg-primary/10 text-primary border-primary/20 font-bold'
+                                : 'bg-white border-gray-200 text-gray-600 hover:border-primary hover:text-primary'
+                            }`}
+                          >
+                            {cat.name}
+                          </button>
+                        ))}
+                        <button
+                          onClick={() => {
+                            setSearchFilterType('pending')
+                            setSelectedSearchCategoryId(null)
+                            debouncedSearch(query, { isPaid: false })
+                          }}
+                          className={`px-4 py-1.5 text-sm font-medium rounded-full border transition-all cursor-pointer ${
+                            searchFilterType === 'pending'
+                              ? 'bg-red-50 text-red-600 border-red-200 font-bold'
+                              : 'bg-white border-gray-200 text-gray-600 hover:border-red-300 hover:text-red-600'
+                          }`}
+                        >
+                          有欠款客户
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Time Range Filter */}
+                    <div className="space-y-3">
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                        <ChevronDown className="h-3.5 w-3.5" /> 时间范围
+                      </p>
+                      <div className="flex items-center gap-3 bg-slate-50 border border-gray-200 px-4 py-2 rounded-xl hover:border-primary transition-colors">
+                        <ChevronDown className="h-4 w-4 text-gray-400" />
+                        <div className="flex flex-col">
+                          <span className="text-[10px] text-gray-400 leading-none">起始日期</span>
+                          <input
+                            type="month"
+                            value={dateRange.start}
+                            onChange={(e) => {
+                              const newStart = e.target.value
+                              setDateRange(prev => ({ ...prev, start: newStart }))
+                              debouncedSearch(query, { startDate: newStart, endDate: dateRange.end })
+                            }}
+                            className="text-sm font-medium text-gray-700 bg-transparent border-none p-0 focus:outline-none focus:ring-0"
+                          />
+                        </div>
+                        <span className="mx-2 text-gray-300">—</span>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] text-gray-400 leading-none">结束日期</span>
+                          <input
+                            type="month"
+                            value={dateRange.end}
+                            onChange={(e) => {
+                              const newEnd = e.target.value
+                              setDateRange(prev => ({ ...prev, end: newEnd }))
+                              debouncedSearch(query, { startDate: dateRange.start, endDate: newEnd })
+                            }}
+                            className="text-sm font-medium text-gray-700 bg-transparent border-none p-0 focus:outline-none focus:ring-0"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Results Section */}
                   <div className="flex-1 overflow-y-auto p-3 space-y-1">
                     {searchLoading ? (
                       <div className="p-8 text-center text-gray-500">搜索中...</div>
@@ -260,6 +354,9 @@ function App() {
                       <>
                         <div className="px-4 py-3 text-xs font-bold text-gray-400 flex items-center justify-between">
                           <span>搜索结果 ({results.length})</span>
+                          <span className="text-[10px] font-normal cursor-pointer hover:text-primary transition-colors">
+                            输入关键词检索更多
+                          </span>
                         </div>
                         {results.map((result, index) => (
                           <div
@@ -269,7 +366,7 @@ function App() {
                           >
                             <div className="flex items-center gap-4">
                               <div className={`size-12 rounded-full flex items-center justify-center font-bold text-lg ${
-                                result.type === 'customer' ? 'bg-blue-100 text-blue-700' :
+                                result.type === 'customer' ? getAvatarColor(result.text) :
                                 result.type === 'route' ? 'bg-green-100 text-green-700' :
                                 'bg-purple-100 text-purple-700'
                               }`}>
@@ -288,13 +385,26 @@ function App() {
                                     {result.type === 'customer' ? '客户' : result.type === 'route' ? '行程' : '票号'}
                                   </span>
                                 </div>
-                                {result.customer && (
+                                {result.type === 'customer' && result.customerSource && (
+                                  <p className="text-xs text-gray-500 mt-0.5">{result.customerSource}</p>
+                                )}
+                                {result.customer && result.type !== 'customer' && (
                                   <p className="text-xs text-gray-500 mt-0.5">客户: {result.customer}</p>
                                 )}
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="text-xs text-gray-400">{result.category}</p>
+                              {result.type === 'customer' && result.balance !== undefined && (
+                                <>
+                                  <p className="text-[10px] text-gray-400 font-bold uppercase">当前待结算</p>
+                                  <p className={`text-lg font-bold ${result.balance > 0 ? 'text-red-600' : 'text-gray-900'}`}>
+                                    ¥ {result.balance.toLocaleString()}
+                                  </p>
+                                </>
+                              )}
+                              {result.type !== 'customer' && (
+                                <p className="text-xs text-gray-400">{result.category}</p>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -302,6 +412,14 @@ function App() {
                     ) : (
                       <div className="p-8 text-center text-gray-500">未找到相关结果</div>
                     )}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="p-4 bg-gray-50 border-t border-gray-100 text-center">
+                    <button className="text-sm font-bold text-primary hover:underline flex items-center justify-center gap-1 mx-auto py-1 group">
+                      查看全部相关搜索结果
+                      <ChevronDown className="h-4 w-4 transition-transform group-hover:translate-x-1 rotate-[-90deg]" />
+                    </button>
                   </div>
                 </div>
               )}

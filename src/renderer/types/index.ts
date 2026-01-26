@@ -60,13 +60,19 @@ export interface SearchResult {
   categoryId: string
   customerId: string
   customer?: string
+  customerSource?: string
+  customerPhone?: string
+  balance?: number
   orderItem?: OrderItem
+  transactionMonth?: string
 }
 
 export interface SearchFilters {
   categoryId?: string
   month?: string
   isPaid?: boolean
+  startDate?: string
+  endDate?: string
 }
 
 // Form types

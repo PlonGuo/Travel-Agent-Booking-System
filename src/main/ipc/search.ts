@@ -5,6 +5,8 @@ interface SearchFilters {
   categoryId?: string
   month?: string
   isPaid?: boolean
+  startDate?: string
+  endDate?: string
 }
 
 export function registerSearchHandlers() {

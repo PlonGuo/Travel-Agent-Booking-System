@@ -37,6 +37,9 @@ export const transactionService = {
         isPaid: data.isPaid ?? false,
         comment: data.comment,
         totalAmount: 0
+      },
+      include: {
+        orderItems: true
       }
     })
   },

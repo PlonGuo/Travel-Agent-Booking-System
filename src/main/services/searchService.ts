@@ -4,6 +4,8 @@ interface SearchFilters {
   categoryId?: string
   month?: string
   isPaid?: boolean
+  startDate?: string
+  endDate?: string
 }
 
 export const searchService = {
@@ -11,6 +13,17 @@ export const searchService = {
   async globalSearch(query: string, filters?: SearchFilters) {
     const prisma = getPrismaClient()
     const results: any[] = []
+
+    // Build date filter for transactions
+    const dateFilter: any = {}
+    if (filters?.startDate || filters?.endDate) {
+      if (filters.startDate) {
+        dateFilter.gte = filters.startDate
+      }
+      if (filters.endDate) {
+        dateFilter.lte = filters.endDate
+      }
+    }
 
     // Search customers by name
     const customers = await prisma.customer.findMany({
@@ -30,7 +43,8 @@ export const searchService = {
           where: {
             AND: [
               filters?.month ? { month: filters.month } : {},
-              filters?.isPaid !== undefined ? { isPaid: filters.isPaid } : {}
+              filters?.isPaid !== undefined ? { isPaid: filters.isPaid } : {},
+              (filters?.startDate || filters?.endDate) ? { month: dateFilter } : {}
             ]
           },
           include: {
@@ -42,6 +56,11 @@ export const searchService = {
 
     // Add customer results
     customers.forEach((customer) => {
+      // Calculate pending balance
+      const balance = customer.transactions
+        .filter(t => !t.isPaid)
+        .reduce((sum, t) => sum + t.totalAmount, 0)
+
       results.push({
         type: 'customer',
         id: customer.id,
@@ -50,7 +69,9 @@ export const searchService = {
         category: customer.category.name,
         categoryId: customer.categoryId,
         customerId: customer.id,
-        customer
+        customer: customer.name,
+        customerSource: customer.source || '',
+        balance: balance
       })
     })
 
@@ -85,6 +106,12 @@ export const searchService = {
       if (filters?.isPaid !== undefined && item.transaction.isPaid !== filters.isPaid) {
         return
       }
+      if (filters?.startDate && item.transaction.month < filters.startDate) {
+        return
+      }
+      if (filters?.endDate && item.transaction.month > filters.endDate) {
+        return
+      }
 
       results.push({
         type: 'route',
@@ -95,6 +122,8 @@ export const searchService = {
         categoryId: item.transaction.customer.categoryId,
         customerId: item.transaction.customer.id,
         customer: item.transaction.customer.name,
+        customerSource: item.transaction.customer.source || '',
+        transactionMonth: item.transaction.month,
         orderItem: item
       })
     })
@@ -131,6 +160,12 @@ export const searchService = {
         if (filters?.isPaid !== undefined && item.transaction.isPaid !== filters.isPaid) {
           return
         }
+        if (filters?.startDate && item.transaction.month < filters.startDate) {
+          return
+        }
+        if (filters?.endDate && item.transaction.month > filters.endDate) {
+          return
+        }
 
         results.push({
           type: 'ticket',
@@ -141,6 +176,8 @@ export const searchService = {
           categoryId: item.transaction.customer.categoryId,
           customerId: item.transaction.customer.id,
           customer: item.transaction.customer.name,
+          customerSource: item.transaction.customer.source || '',
+          transactionMonth: item.transaction.month,
           orderItem: item
         })
       })

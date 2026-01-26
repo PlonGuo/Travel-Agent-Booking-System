@@ -115,7 +115,7 @@ export function TransactionCard({
 
         {/* Order Items Table */}
         <div className="p-4">
-          {transaction.orderItems && transaction.orderItems.length > 0 ? (
+          {(transaction.orderItems && transaction.orderItems.length > 0) || isAddingOrderItem ? (
             <table className="w-full">
               <thead>
                 <tr className="text-xs text-muted-foreground border-b">
@@ -128,7 +128,7 @@ export function TransactionCard({
                 </tr>
               </thead>
               <tbody>
-                {transaction.orderItems.map((item) => (
+                {transaction.orderItems?.map((item) => (
                   <OrderItemRow
                     key={item.id}
                     orderItem={item}
