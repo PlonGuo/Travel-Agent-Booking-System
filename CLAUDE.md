@@ -32,11 +32,26 @@ Built with React + TypeScript + Prisma + SQLite.
 
 Renderer → IPC → Main Process → Prisma → SQLite
 
+## Database Storage
+
+**Development Mode** (when running `pnpm dev`):
+- Database location: `prisma/data.db` (in project folder)
+- Allows easier access with Prisma Studio
+- File is ignored by `.gitignore` (line 147-148)
+
+**Production Mode** (when packaged with `pnpm build`):
+- Database location: `app.getPath('userData')/data.db`
+- Outside project directory for proper app data storage
+
+**Git Policy**:
+- ✅ DO commit: `prisma/seed.ts`, `prisma/schema.prisma`, migrations
+- ❌ DON'T commit: `prisma/*.db`, `prisma/*.db-journal` (actual database files)
+- Database files are protected by `.gitignore`
+
 ## Important Notes
 
 - All UI text must be in Chinese (中文)
 - Target user is 50+ years old, prioritize clarity and usability
-- Database stored in app.getPath('userData'), not install directory
 - No HTTP API needed, use Electron IPC only
 - Each entity (Customer, Transaction, OrderItem) has a comment field
 
@@ -54,10 +69,17 @@ Renderer → IPC → Main Process → Prisma → SQLite
 - Services: camelCase with "Service" suffix (customerService.ts)
 - IPC handlers: camelCase (customers.ts)
 
-## UI
+## UI Design Reference
 
-- Always follow the UI design in design-references folder
+- UI designs and mockups are stored in `/design-references` folder
+- Always reference these designs when implementing or modifying UI components
+- Maintain consistency with existing design patterns shown in references
+- Use `/ui-ux-pro-max` skill for UI design assistance (supports React + Tailwind stack)
+- The Electron renderer is a React app, so all web UI/UX patterns apply
 
-## Servers availability
+## Testing & Runtime Limitations
 
-- If the OUTPUT of some command you ran for testing shows undefined or some error messages, ask me to run cli instead of keeping trying.
+- Claude cannot run the dev server (`pnpm dev`) or verify the app's runtime behavior
+- If automated commands produce errors, undefined values, or unexpected output, stop retrying
+- Instead, ask the user to manually run commands in their terminal to verify functionality
+- Focus on code changes and static analysis rather than runtime testing
