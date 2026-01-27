@@ -19,8 +19,35 @@ Built with React + TypeScript + Prisma + SQLite.
 - `pnpm dev` - Start dev mode
 - `pnpm build` - Build for production
 - `pnpm build:win` - Package for Windows
+- `pnpm test` - Run tests
+- `pnpm test:watch` - Run tests in watch mode
+- `pnpm test:ui` - Run tests with UI
+- `pnpm test:coverage` - Run tests with coverage report
 - `pnpm prisma:generate` - Generate Prisma client
 - `pnpm prisma:push` - Sync schema to database
+
+## Test
+
+**Testing Framework**: Vitest + React Testing Library
+
+**Important**: Whenever you complete a task, run `pnpm test` to ensure all tests pass.
+
+**Test Configuration**:
+- Config file: `vitest.config.ts`
+- Setup file: `src/renderer/test/setup.ts`
+- Test files: Place `.test.tsx` or `.test.ts` files next to the component/module being tested
+
+**Writing Tests**:
+- Test React components using `@testing-library/react`
+- Use `@testing-library/user-event` for user interactions
+- Mock Electron IPC calls in `src/renderer/test/setup.ts`
+- Follow existing test patterns in the codebase
+
+**Test Commands**:
+- `pnpm test` - Run all tests once (use this after completing tasks)
+- `pnpm test:watch` - Run tests in watch mode during development
+- `pnpm test:ui` - Open Vitest UI for interactive test running
+- `pnpm test:coverage` - Generate test coverage report
 
 ## Architecture
 
