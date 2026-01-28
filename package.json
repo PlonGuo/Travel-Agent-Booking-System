@@ -9,8 +9,8 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "build:win": "pnpm build && electron-builder --win",
-    "build:mac": "pnpm build && electron-builder --mac",
+    "build:win": "pnpm build && node scripts/prepare-prisma.js && electron-builder --win",
+    "build:mac": "pnpm build && node scripts/prepare-prisma.js && electron-builder --mac",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
@@ -44,6 +44,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@electron/asar": "^4.0.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
@@ -74,13 +75,23 @@
     },
     "files": [
       "out/**/*",
-      "!node_modules",
-      "node_modules/@prisma/client/**/*",
-      "node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/**/*",
-      "node_modules/.pnpm/@prisma+client@*/node_modules/@prisma/**/*"
+      {
+        "from": "node_modules/.prisma",
+        "to": "node_modules/.prisma",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "node_modules/@prisma/client",
+        "to": "node_modules/@prisma/client",
+        "filter": [
+          "**/*"
+        ]
+      }
     ],
     "asarUnpack": [
-      "node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/**/*.node"
+      "node_modules/.prisma/**/*.node"
     ],
     "extraResources": [
       {
@@ -90,7 +101,10 @@
     ],
     "win": {
       "target": [
-        "nsis"
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
       ],
       "icon": "build/Travel-app-icon.png"
     },

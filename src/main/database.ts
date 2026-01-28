@@ -5,11 +5,31 @@ import fs from 'fs'
 
 let prisma: PrismaClient
 
+async function migrateDatabase(client: PrismaClient): Promise<void> {
+  console.log('Checking for schema migrations...')
+
+  // Migration: Add invoiceCompany column to OrderItem if it doesn't exist
+  try {
+    // Check if column exists by querying it
+    await client.$queryRawUnsafe(`SELECT "invoiceCompany" FROM "OrderItem" LIMIT 1`)
+    console.log('Migration: invoiceCompany column already exists')
+  } catch {
+    // Column doesn't exist, add it
+    console.log('Migration: Adding invoiceCompany column to OrderItem...')
+    await client.$executeRawUnsafe(`ALTER TABLE "OrderItem" ADD COLUMN "invoiceCompany" TEXT`)
+    await client.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "OrderItem_invoiceCompany_idx" ON "OrderItem"("invoiceCompany")`)
+    console.log('Migration: invoiceCompany column added successfully')
+  }
+}
+
 async function initializeDatabase(client: PrismaClient): Promise<void> {
   try {
     // Check if tables exist by trying to count categories
     await client.category.count()
     console.log('Database tables already exist')
+
+    // Run migrations for existing databases
+    await migrateDatabase(client)
   } catch (error) {
     // Tables don't exist, create them
     console.log('Creating database tables...')
@@ -77,6 +97,7 @@ async function initializeDatabase(client: PrismaClient): Promise<void> {
         "route" TEXT NOT NULL,
         "ticketNumber" TEXT,
         "amount" REAL NOT NULL,
+        "invoiceCompany" TEXT,
         "date" TEXT,
         "comment" TEXT,
         "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -150,3 +150,6 @@ prisma/*.db-journal
 # Environment variables
 .env
 .env.local
+
+# Prisma client copy for electron-builder
+node_modules/.prisma
