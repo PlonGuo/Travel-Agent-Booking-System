@@ -74,19 +74,50 @@
     },
     "files": [
       "out/**/*",
-      "prisma/**/*"
+      "!node_modules",
+      "node_modules/@prisma/client/**/*",
+      "node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/**/*",
+      "node_modules/.pnpm/@prisma+client@*/node_modules/@prisma/**/*"
+    ],
+    "asarUnpack": [
+      "node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/**/*.node"
+    ],
+    "extraResources": [
+      {
+        "from": "prisma/schema.prisma",
+        "to": "prisma/schema.prisma"
+      }
     ],
     "win": {
       "target": [
         "nsis"
       ],
-      "icon": "resources/icon.png"
+      "icon": "build/Travel-app-icon.png"
     },
     "mac": {
       "target": [
         "dmg"
       ],
-      "icon": "resources/icon.png"
+      "icon": "build/Travel-app-icon.png",
+      "category": "public.app-category.business"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
     }
   }
 }
