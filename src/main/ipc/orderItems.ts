@@ -12,6 +12,7 @@ export function registerOrderItemHandlers() {
         route: string
         ticketNumber?: string
         amount: number
+        invoiceCompany?: string
         date?: string
         comment?: string
       }
@@ -30,6 +31,7 @@ export function registerOrderItemHandlers() {
         route?: string
         ticketNumber?: string
         amount?: number
+        invoiceCompany?: string
         date?: string
         comment?: string
       }

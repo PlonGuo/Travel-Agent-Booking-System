@@ -17,7 +17,7 @@
     "test:coverage": "vitest run --coverage",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
-    "prisma:studio": "prisma studio",
+    "prisma:studio": "echo '🔧 Prisma Studio starting on http://localhost:5555' && prisma studio --port 5555",
     "prisma:seed": "tsx prisma/seed.ts"
   },
   "prisma": {
@@ -40,7 +40,8 @@
     "react-dom": "^18.3.1",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
-    "uuid": "^11.0.3"
+    "uuid": "^11.0.3",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",

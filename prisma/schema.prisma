@@ -56,19 +56,21 @@ model Transaction {
 
 // Order Item (individual entry)
 model OrderItem {
-  id            String      @id @default(uuid())
-  transactionId String
-  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
-  type          String      // flight/hotel/insurance/other
-  route         String
-  ticketNumber  String?
-  amount        Float
-  date          String?
-  comment       String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id             String      @id @default(uuid())
+  transactionId  String
+  transaction    Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  type           String      // flight/hotel/insurance/other
+  route          String
+  ticketNumber   String?
+  amount         Float
+  invoiceCompany String?     // 开票公司
+  date           String?
+  comment        String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
   @@index([transactionId])
   @@index([route])
   @@index([ticketNumber])
+  @@index([invoiceCompany])
 }

@@ -68,6 +68,9 @@ export function TransactionCard({
     return `${year}年${parseInt(m)}月`
   }
 
+  // Calculate total payable amount from all order items
+  const totalPayable = transaction.orderItems?.reduce((sum, item) => sum + item.amount, 0) || 0
+
   return (
     <>
       <div className="bg-white rounded-xl border overflow-hidden">
@@ -84,6 +87,10 @@ export function TransactionCard({
             </Badge>
           </div>
           <div className="flex items-center gap-4">
+            <div className="text-right">
+              <span className="text-sm text-muted-foreground mr-2">总应付:</span>
+              <span className="font-bold text-lg text-orange-600">¥{totalPayable.toLocaleString()}</span>
+            </div>
             <div className="text-right">
               <span className="text-sm text-muted-foreground mr-2">合计:</span>
               <span className="font-bold text-lg">¥{transaction.totalAmount.toLocaleString()}</span>
@@ -123,6 +130,7 @@ export function TransactionCard({
                   <th className="text-left py-2 px-2">行程</th>
                   <th className="text-left py-2 px-2 w-32">票号</th>
                   <th className="text-right py-2 px-2 w-24">应付</th>
+                  <th className="text-left py-2 px-2 w-24">开票公司</th>
                   <th className="text-center py-2 px-2 w-20">备注</th>
                   <th className="text-center py-2 px-2 w-20">操作</th>
                 </tr>

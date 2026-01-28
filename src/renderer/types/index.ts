@@ -45,6 +45,7 @@ export interface OrderItem {
   route: string
   ticketNumber?: string
   amount: number
+  invoiceCompany?: string // 开票公司
   date?: string
   comment?: string
   createdAt: Date
@@ -99,6 +100,19 @@ export interface OrderItemFormData {
   route: string
   ticketNumber?: string
   amount: number
+  invoiceCompany?: string // 开票公司
   date?: string
   comment?: string
+}
+
+// Reconciliation types
+export interface ReconciliationOrderItem {
+  id: string
+  type: string
+  route: string
+  ticketNumber?: string
+  amount: number
+  date?: string
+  comment?: string
+  customerName: string
 }

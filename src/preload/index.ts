@@ -66,6 +66,7 @@ contextBridge.exposeInMainWorld('api', {
       route: string
       ticketNumber?: string
       amount: number
+      invoiceCompany?: string
       date?: string
       comment?: string
     }) => ipcRenderer.invoke('orderItems:create', data),
@@ -76,6 +77,7 @@ contextBridge.exposeInMainWorld('api', {
         route?: string
         ticketNumber?: string
         amount?: number
+        invoiceCompany?: string
         date?: string
         comment?: string
       }
@@ -93,5 +95,23 @@ contextBridge.exposeInMainWorld('api', {
         isPaid?: boolean
       }
     ) => ipcRenderer.invoke('search:global', query, filters)
+  },
+
+  // Excel Import/Export
+  excel: {
+    selectFile: () => ipcRenderer.invoke('excel:selectFile'),
+    detectMonth: (filePath: string) => ipcRenderer.invoke('excel:detectMonth', filePath),
+    import: (filePath: string, year: string, month: string) =>
+      ipcRenderer.invoke('excel:import', filePath, year, month),
+    export: () => ipcRenderer.invoke('excel:export')
+  },
+
+  // Reconciliation
+  reconciliation: {
+    getCompanies: (month: string) => ipcRenderer.invoke('reconciliation:getCompanies', month),
+    getOrderItems: (month: string, invoiceCompany: string) =>
+      ipcRenderer.invoke('reconciliation:getOrderItems', month, invoiceCompany),
+    export: (month: string, invoiceCompany: string) =>
+      ipcRenderer.invoke('reconciliation:export', month, invoiceCompany)
   }
 })

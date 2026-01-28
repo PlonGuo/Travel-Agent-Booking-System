@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Search, Plus, HelpCircle, ChevronDown, Pencil, Trash2, X } from 'lucide-react'
+import { Search, Plus, HelpCircle, ChevronDown, Pencil, Trash2, X, Upload, Download, Home, Calculator } from 'lucide-react'
 import { useCategories, useCustomers, useSearch } from '@/hooks'
 import { CustomerForm } from '@/components/customer/CustomerForm'
 import { CustomerCard } from '@/components/customer/CustomerCard'
+import { ImportDialog } from '@/components/excel/ImportDialog'
+import { ReconciliationPage } from '@/components/reconciliation'
 import {
   Dialog,
   DialogContent,
@@ -32,10 +34,12 @@ function getAvatarColor(name: string) {
 }
 
 function App() {
+  const [activeTab, setActiveTab] = useState<'home' | 'reconciliation'>('home')
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
   const [expandedCustomerId, setExpandedCustomerId] = useState<string | null>(null)
   const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false)
   const [isCategoryFormOpen, setIsCategoryFormOpen] = useState(false)
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [categoryName, setCategoryName] = useState('')
   const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false)
@@ -47,6 +51,7 @@ function App() {
   const {
     categories,
     loading: categoriesLoading,
+    fetchCategories,
     createCategory,
     updateCategory,
     deleteCategory,
@@ -132,6 +137,25 @@ function App() {
     }
   }
 
+  const handleExport = async () => {
+    try {
+      const filePath = await window.api.excel.export()
+      if (filePath) {
+        alert(`导出成功!\n文件保存至: ${filePath}`)
+      }
+    } catch (error) {
+      alert(`导出失败: ${error}`)
+    }
+  }
+
+  const handleImportComplete = useCallback(async () => {
+    // Refresh categories and customers after import
+    await fetchCategories()
+    if (selectedCategoryId) {
+      await fetchCustomers(selectedCategoryId)
+    }
+  }, [fetchCategories, selectedCategoryId, fetchCustomers])
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     debouncedSearch(e.target.value)
     setIsSearchDropdownOpen(true)
@@ -179,7 +203,7 @@ function App() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="sticky top-0 z-[100] flex items-center border-b border-gray-200 bg-white/90 backdrop-blur-md px-8 py-3">
+      <header className="sticky top-0 z-[100] flex items-center justify-between border-b border-gray-200 bg-white/90 backdrop-blur-md px-8 py-3">
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-3 text-primary">
             <div className="size-8">
@@ -189,9 +213,59 @@ function App() {
             </div>
             <h1 className="text-[#111318] text-xl font-bold leading-tight tracking-tight">旅游财务核算系统</h1>
           </div>
+
+          {/* Tab Navigation */}
+          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setActiveTab('home')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                activeTab === 'home'
+                  ? 'bg-white text-primary shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Home className="h-4 w-4" />
+              首页
+            </button>
+            <button
+              onClick={() => setActiveTab('reconciliation')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                activeTab === 'reconciliation'
+                  ? 'bg-white text-primary shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Calculator className="h-4 w-4" />
+              对账
+            </button>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsImportDialogOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Upload className="h-4 w-4" />
+            导入
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExport}
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            导出
+          </Button>
         </div>
       </header>
 
+      {/* Main Content - Conditional Rendering */}
+      {activeTab === 'reconciliation' ? (
+        <ReconciliationPage />
+      ) : (
       <main className="w-full max-w-6xl mx-auto px-6 py-12 relative">
         {/* Search Section */}
         <div className="mb-16 relative">
@@ -528,8 +602,10 @@ function App() {
           )}
         </div>
       </main>
+      )}
 
-      {/* FABs */}
+      {/* FABs - Only show on home tab */}
+      {activeTab === 'home' && (
       <div className="fixed bottom-10 right-10 flex flex-col gap-4 z-[90]">
         <button className="size-14 rounded-full bg-white shadow-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:text-primary hover:border-primary transition-all group relative">
           <HelpCircle className="h-6 w-6" />
@@ -548,6 +624,7 @@ function App() {
           </span>
         </button>
       </div>
+      )}
 
       {/* Add/Edit Customer Modal */}
       <CustomerForm
@@ -586,6 +663,13 @@ function App() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Import Dialog */}
+      <ImportDialog
+        isOpen={isImportDialogOpen}
+        onClose={() => setIsImportDialogOpen(false)}
+        onImportComplete={handleImportComplete}
+      />
     </div>
   )
 }

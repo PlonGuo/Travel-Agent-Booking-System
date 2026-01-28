@@ -9,6 +9,7 @@ export const orderItemService = {
     route: string
     ticketNumber?: string
     amount: number
+    invoiceCompany?: string
     date?: string
     comment?: string
   }) {
@@ -31,6 +32,7 @@ export const orderItemService = {
       route?: string
       ticketNumber?: string
       amount?: number
+      invoiceCompany?: string
       date?: string
       comment?: string
     }

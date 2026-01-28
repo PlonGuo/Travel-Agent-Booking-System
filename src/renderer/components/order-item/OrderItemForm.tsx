@@ -29,6 +29,7 @@ export function OrderItemForm({ onSubmit, onCancel }: OrderItemFormProps) {
     route: '',
     ticketNumber: '',
     amount: 0,
+    invoiceCompany: '',
     comment: '',
   })
   const [isLoading, setIsLoading] = useState(false)
@@ -44,6 +45,7 @@ export function OrderItemForm({ onSubmit, onCancel }: OrderItemFormProps) {
         route: '',
         ticketNumber: '',
         amount: 0,
+        invoiceCompany: '',
         comment: '',
       })
     } finally {
@@ -94,6 +96,14 @@ export function OrderItemForm({ onSubmit, onCancel }: OrderItemFormProps) {
           onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
           className="h-8 text-right"
           placeholder="0"
+        />
+      </td>
+      <td className="py-2 px-2">
+        <Input
+          value={formData.invoiceCompany || ''}
+          onChange={(e) => setFormData({ ...formData, invoiceCompany: e.target.value })}
+          className="h-8"
+          placeholder="开票公司"
         />
       </td>
       <td className="py-2 px-2"></td>

@@ -1,0 +1,74 @@
+{
+  "description": "Backup of original dummy data from seed.ts (company-based categories)",
+  "backupDate": "2026-01-27",
+  "categories": [
+    { "name": "中国国旅", "order": 0 },
+    { "name": "康辉旅游", "order": 1 },
+    { "name": "中旅国际", "order": 2 },
+    { "name": "凯撒旅游", "order": 3 },
+    { "name": "私营业主", "order": 4 }
+  ],
+  "customers": [
+    {
+      "categoryName": "中国国旅",
+      "name": "汤奇",
+      "source": "上海国旅总社",
+      "invoiceCompany": "上海国旅总社",
+      "comment": "138****8888 | VIP客户",
+      "transactions": [
+        {
+          "month": "2023-10",
+          "totalAmount": 8640.00,
+          "profit": 864.00,
+          "isPaid": false,
+          "comment": "核对中",
+          "orderItems": [
+            {
+              "type": "flight",
+              "route": "北京-东京往返",
+              "ticketNumber": "TR-20231025-01",
+              "amount": 8640.00,
+              "date": "2023-10-25",
+              "comment": "含税机票"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "categoryName": "中国国旅",
+      "name": "汤小圆",
+      "source": "上海国旅总社",
+      "invoiceCompany": "上海国旅总社",
+      "comment": "138****5555 | VIP客户",
+      "transactions": [
+        {
+          "month": "2023-10",
+          "totalAmount": 13040.00,
+          "profit": 1304.00,
+          "isPaid": false,
+          "comment": "部分核对",
+          "orderItems": [
+            {
+              "type": "flight",
+              "route": "北京往返巴黎",
+              "ticketNumber": "TR-20231025-01",
+              "amount": 8640.00,
+              "date": "2023-10-25",
+              "comment": "含税机票"
+            },
+            {
+              "type": "hotel",
+              "route": "普吉岛5天4晚",
+              "ticketNumber": "TR-20231018-05",
+              "amount": 4200.00,
+              "date": "2023-10-18",
+              "comment": "自由行套餐"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "note": "Full data available in prisma/seed.ts - this is a partial backup for reference"
+}

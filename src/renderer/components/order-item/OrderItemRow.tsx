@@ -42,6 +42,7 @@ export function OrderItemRow({ orderItem, onUpdate, onDelete }: OrderItemRowProp
     route: orderItem.route,
     ticketNumber: orderItem.ticketNumber || '',
     amount: orderItem.amount,
+    invoiceCompany: orderItem.invoiceCompany || '',
   })
 
   const handleSave = async () => {
@@ -55,6 +56,7 @@ export function OrderItemRow({ orderItem, onUpdate, onDelete }: OrderItemRowProp
       route: orderItem.route,
       ticketNumber: orderItem.ticketNumber || '',
       amount: orderItem.amount,
+      invoiceCompany: orderItem.invoiceCompany || '',
     })
     setIsEditing(false)
   }
@@ -121,6 +123,14 @@ export function OrderItemRow({ orderItem, onUpdate, onDelete }: OrderItemRowProp
             className="h-8 text-right"
           />
         </td>
+        <td className="py-2 px-2">
+          <Input
+            value={editData.invoiceCompany}
+            onChange={(e) => setEditData({ ...editData, invoiceCompany: e.target.value })}
+            className="h-8"
+            placeholder="开票公司"
+          />
+        </td>
         <td className="py-2 px-2"></td>
         <td className="py-2 px-2">
           <div className="flex items-center justify-center gap-1">
@@ -152,6 +162,7 @@ export function OrderItemRow({ orderItem, onUpdate, onDelete }: OrderItemRowProp
         <td className="py-2 px-2 font-medium">{orderItem.route}</td>
         <td className="py-2 px-2 text-muted-foreground">{orderItem.ticketNumber || '-'}</td>
         <td className="py-2 px-2 text-right font-medium">¥{orderItem.amount.toLocaleString()}</td>
+        <td className="py-2 px-2 text-muted-foreground">{orderItem.invoiceCompany || '-'}</td>
         <td className="py-2 px-2 text-center">
           <CommentPopover
             comment={orderItem.comment}

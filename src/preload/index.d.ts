@@ -53,6 +53,7 @@ export interface ElectronAPI {
       route: string
       ticketNumber?: string
       amount: number
+      invoiceCompany?: string
       date?: string
       comment?: string
     }) => Promise<any>
@@ -63,6 +64,7 @@ export interface ElectronAPI {
         route?: string
         ticketNumber?: string
         amount?: number
+        invoiceCompany?: string
         date?: string
         comment?: string
       }
@@ -78,6 +80,33 @@ export interface ElectronAPI {
         isPaid?: boolean
       }
     ) => Promise<any[]>
+  }
+  excel: {
+    selectFile: () => Promise<string | null>
+    detectMonth: (filePath: string) => Promise<string | null>
+    import: (filePath: string, year: string, month: string) => Promise<{
+      success: boolean
+      categoriesCreated: number
+      customersCreated: number
+      transactionsCreated: number
+      orderItemsCreated: number
+      errors: string[]
+    }>
+    export: () => Promise<string | null>
+  }
+  reconciliation: {
+    getCompanies: (month: string) => Promise<string[]>
+    getOrderItems: (month: string, invoiceCompany: string) => Promise<{
+      id: string
+      type: string
+      route: string
+      ticketNumber: string | null
+      amount: number
+      date: string | null
+      comment: string | null
+      customerName: string
+    }[]>
+    export: (month: string, invoiceCompany: string) => Promise<string | null>
   }
 }
 
