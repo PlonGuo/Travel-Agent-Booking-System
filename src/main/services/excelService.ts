@@ -546,7 +546,13 @@ export async function exportReconciliation(
     const items = await prisma.orderItem.findMany({
       where: {
         invoiceCompany,
-        transaction: { month }
+        transaction: {
+          customer: {
+            category: {
+              name: month
+            }
+          }
+        }
       },
       include: {
         transaction: {

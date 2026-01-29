@@ -4,26 +4,14 @@ async function migratePaymentStatus() {
   const prisma = new PrismaClient()
 
   console.log('Starting payment status migration...')
+  console.log('NOTE: This script is deprecated. Payment tracking has been moved to OrderItem level.')
+  console.log('Use the built-in auto-migration system instead.')
 
-  const transactions = await prisma.transaction.findMany({
-    include: { orderItems: true }
-  })
+  // This script is kept for reference but is no longer functional
+  // The isPaid field has been moved from Transaction to OrderItem
+  // Auto-migration is now handled by src/main/services/migrationService.ts
 
-  let updatedCount = 0
-
-  // For each paid transaction, mark all its order items as paid
-  for (const transaction of transactions) {
-    if (transaction.isPaid && transaction.orderItems.length > 0) {
-      await prisma.orderItem.updateMany({
-        where: { transactionId: transaction.id },
-        data: { isPaid: true }
-      })
-      updatedCount += transaction.orderItems.length
-    }
-  }
-
-  console.log(`Migration complete. Updated ${updatedCount} order items.`)
-  console.log(`Total transactions: ${transactions.length}`)
+  console.log('No migration performed. Please use the app\'s built-in migration system.')
 }
 
 migratePaymentStatus()

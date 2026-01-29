@@ -74,3 +74,11 @@ model OrderItem {
   @@index([invoiceCompany])
   @@index([isPaid])
 }
+
+// Schema Version Tracking
+model SchemaVersion {
+  id        Int      @id @default(1)
+  version   Int      @unique
+  appliedAt DateTime @default(now())
+  name      String
+}

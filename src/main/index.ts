@@ -2,6 +2,7 @@ import { app, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { getPrismaClient, closePrismaClient } from './database'
 import { registerAllHandlers } from './ipc'
+import { handleMigrationOnStartup } from './services/migrationService'
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -24,9 +25,19 @@ function createWindow() {
 }
 
 // Initialize database and handlers when app is ready
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // Initialize Prisma database connection
   getPrismaClient()
+
+  // Check and handle database migrations
+  const migrationSuccess = await handleMigrationOnStartup()
+
+  if (!migrationSuccess) {
+    // User cancelled or migration failed, quit the app
+    console.log('Migration cancelled or failed, exiting app')
+    app.quit()
+    return
+  }
 
   // Register all IPC handlers
   registerAllHandlers()

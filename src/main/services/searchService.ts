@@ -30,6 +30,7 @@ export const searchService = {
       where: {
         AND: [
           filters?.categoryId ? { categoryId: filters.categoryId } : {},
+          filters?.month ? { category: { name: filters.month } } : {},
           {
             name: {
               contains: query
@@ -40,13 +41,6 @@ export const searchService = {
       include: {
         category: true,
         transactions: {
-          where: {
-            AND: [
-              filters?.month ? { month: filters.month } : {},
-              filters?.isPaid !== undefined ? { isPaid: filters.isPaid } : {},
-              (filters?.startDate || filters?.endDate) ? { month: dateFilter } : {}
-            ]
-          },
           include: {
             orderItems: true
           }
@@ -56,10 +50,21 @@ export const searchService = {
 
     // Add customer results
     customers.forEach((customer) => {
-      // Calculate pending balance
-      const balance = customer.transactions
-        .filter(t => !t.isPaid)
-        .reduce((sum, t) => sum + t.totalAmount, 0)
+      // Calculate pending balance from unpaid order items
+      const balance = customer.transactions.reduce((sum, transaction) => {
+        const unpaidAmount = transaction.orderItems
+          .filter(item => !item.isPaid)
+          .reduce((itemSum, item) => itemSum + item.amount, 0)
+        return sum + unpaidAmount
+      }, 0)
+
+      // Filter by payment status if specified
+      if (filters?.isPaid !== undefined) {
+        const hasMatchingItems = customer.transactions.some(t =>
+          t.orderItems.some(item => item.isPaid === filters.isPaid)
+        )
+        if (!hasMatchingItems) return
+      }
 
       results.push({
         type: 'customer',
@@ -100,16 +105,16 @@ export const searchService = {
       if (filters?.categoryId && item.transaction.customer.categoryId !== filters.categoryId) {
         return
       }
-      if (filters?.month && item.transaction.month !== filters.month) {
+      if (filters?.month && item.transaction.customer.category.name !== filters.month) {
         return
       }
-      if (filters?.isPaid !== undefined && item.transaction.isPaid !== filters.isPaid) {
+      if (filters?.isPaid !== undefined && item.isPaid !== filters.isPaid) {
         return
       }
-      if (filters?.startDate && item.transaction.month < filters.startDate) {
+      if (filters?.startDate && item.transaction.customer.category.name < filters.startDate) {
         return
       }
-      if (filters?.endDate && item.transaction.month > filters.endDate) {
+      if (filters?.endDate && item.transaction.customer.category.name > filters.endDate) {
         return
       }
 
@@ -123,7 +128,7 @@ export const searchService = {
         customerId: item.transaction.customer.id,
         customer: item.transaction.customer.name,
         customerSource: item.transaction.customer.source || '',
-        transactionMonth: item.transaction.month,
+        transactionMonth: item.transaction.customer.category.name,
         orderItem: item
       })
     })
@@ -154,16 +159,16 @@ export const searchService = {
         if (filters?.categoryId && item.transaction.customer.categoryId !== filters.categoryId) {
           return
         }
-        if (filters?.month && item.transaction.month !== filters.month) {
+        if (filters?.month && item.transaction.customer.category.name !== filters.month) {
           return
         }
-        if (filters?.isPaid !== undefined && item.transaction.isPaid !== filters.isPaid) {
+        if (filters?.isPaid !== undefined && item.isPaid !== filters.isPaid) {
           return
         }
-        if (filters?.startDate && item.transaction.month < filters.startDate) {
+        if (filters?.startDate && item.transaction.customer.category.name < filters.startDate) {
           return
         }
-        if (filters?.endDate && item.transaction.month > filters.endDate) {
+        if (filters?.endDate && item.transaction.customer.category.name > filters.endDate) {
           return
         }
 
@@ -177,7 +182,7 @@ export const searchService = {
           customerId: item.transaction.customer.id,
           customer: item.transaction.customer.name,
           customerSource: item.transaction.customer.source || '',
-          transactionMonth: item.transaction.month,
+          transactionMonth: item.transaction.customer.category.name,
           orderItem: item
         })
       })
