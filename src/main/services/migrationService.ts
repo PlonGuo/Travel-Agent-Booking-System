@@ -221,15 +221,42 @@ export async function resetDatabase(): Promise<void> {
   const dbPath = getDatabasePath()
 
   if (fs.existsSync(dbPath)) {
-    // Delete database file
-    fs.unlinkSync(dbPath)
-    console.log('Database deleted')
+    try {
+      // Close Prisma connection before deleting database
+      const { closePrismaClient } = await import('../database')
+      await closePrismaClient()
+      console.log('Prisma connection closed')
 
-    // Delete journal file if exists
-    const journalPath = `${dbPath}-journal`
-    if (fs.existsSync(journalPath)) {
-      fs.unlinkSync(journalPath)
-      console.log('Database journal deleted')
+      // Wait a bit for file handles to be released (especially important on Windows)
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      // Delete database file
+      fs.unlinkSync(dbPath)
+      console.log('Database deleted')
+
+      // Delete journal file if exists
+      const journalPath = `${dbPath}-journal`
+      if (fs.existsSync(journalPath)) {
+        fs.unlinkSync(journalPath)
+        console.log('Database journal deleted')
+      }
+
+      // Delete WAL file if exists (Write-Ahead Logging)
+      const walPath = `${dbPath}-wal`
+      if (fs.existsSync(walPath)) {
+        fs.unlinkSync(walPath)
+        console.log('Database WAL deleted')
+      }
+
+      // Delete SHM file if exists (Shared Memory)
+      const shmPath = `${dbPath}-shm`
+      if (fs.existsSync(shmPath)) {
+        fs.unlinkSync(shmPath)
+        console.log('Database SHM deleted')
+      }
+    } catch (error) {
+      console.error('Error deleting database:', error)
+      throw new Error(`无法删除数据库文件：${error instanceof Error ? error.message : String(error)}`)
     }
   }
 }
@@ -352,15 +379,32 @@ export async function handleMigrationOnStartup(): Promise<boolean> {
         })
 
         if (confirmResult.response === 0) {
-          await resetDatabase()
-          await dialog.showMessageBox({
-            type: 'info',
-            title: '重置完成',
-            message: '数据库已重置',
-            detail: '应用将使用全新的数据库启动。',
-            buttons: ['确定']
-          })
-          return true
+          try {
+            await resetDatabase()
+
+            // Reinitialize Prisma with new database
+            const { getPrismaClient } = await import('../database')
+            getPrismaClient()
+            console.log('Prisma client reinitialized with new database')
+
+            await dialog.showMessageBox({
+              type: 'info',
+              title: '重置完成',
+              message: '数据库已重置',
+              detail: '应用将使用全新的数据库启动。',
+              buttons: ['确定']
+            })
+            return true
+          } catch (error) {
+            await dialog.showMessageBox({
+              type: 'error',
+              title: '重置失败',
+              message: '数据库重置失败',
+              detail: error instanceof Error ? error.message : String(error),
+              buttons: ['确定']
+            })
+            return false
+          }
         }
         return false
       }

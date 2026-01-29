@@ -70,10 +70,8 @@ async function initializeDatabase(client: PrismaClient): Promise<void> {
       CREATE TABLE IF NOT EXISTS "Transaction" (
         "id" TEXT NOT NULL PRIMARY KEY,
         "customerId" TEXT NOT NULL,
-        "month" TEXT NOT NULL,
         "totalAmount" REAL NOT NULL DEFAULT 0,
         "profit" REAL NOT NULL DEFAULT 0,
-        "isPaid" INTEGER NOT NULL DEFAULT 0,
         "comment" TEXT,
         "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" DATETIME NOT NULL,
@@ -83,10 +81,6 @@ async function initializeDatabase(client: PrismaClient): Promise<void> {
 
     await client.$executeRawUnsafe(`
       CREATE INDEX IF NOT EXISTS "Transaction_customerId_idx" ON "Transaction"("customerId");
-    `)
-
-    await client.$executeRawUnsafe(`
-      CREATE INDEX IF NOT EXISTS "Transaction_month_idx" ON "Transaction"("month");
     `)
 
     await client.$executeRawUnsafe(`
@@ -100,6 +94,7 @@ async function initializeDatabase(client: PrismaClient): Promise<void> {
         "invoiceCompany" TEXT,
         "date" TEXT,
         "comment" TEXT,
+        "isPaid" INTEGER NOT NULL DEFAULT 0,
         "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" DATETIME NOT NULL,
         FOREIGN KEY ("transactionId") REFERENCES "Transaction"("id") ON DELETE CASCADE
@@ -118,7 +113,31 @@ async function initializeDatabase(client: PrismaClient): Promise<void> {
       CREATE INDEX IF NOT EXISTS "OrderItem_ticketNumber_idx" ON "OrderItem"("ticketNumber");
     `)
 
-    console.log('Database tables created successfully')
+    await client.$executeRawUnsafe(`
+      CREATE INDEX IF NOT EXISTS "OrderItem_invoiceCompany_idx" ON "OrderItem"("invoiceCompany");
+    `)
+
+    await client.$executeRawUnsafe(`
+      CREATE INDEX IF NOT EXISTS "OrderItem_isPaid_idx" ON "OrderItem"("isPaid");
+    `)
+
+    // Create SchemaVersion table
+    await client.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "SchemaVersion" (
+        "id" INTEGER NOT NULL PRIMARY KEY DEFAULT 1,
+        "version" INTEGER NOT NULL UNIQUE,
+        "appliedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "name" TEXT NOT NULL
+      );
+    `)
+
+    // Insert initial schema version
+    await client.$executeRawUnsafe(`
+      INSERT OR IGNORE INTO "SchemaVersion" ("id", "version", "name", "appliedAt")
+      VALUES (1, 2, 'Initial schema with OrderItem.isPaid', CURRENT_TIMESTAMP);
+    `)
+
+    console.log('Database tables created successfully with schema version 2')
   }
 }
 
@@ -189,5 +208,8 @@ export function getPrismaClient(): PrismaClient {
 export async function closePrismaClient(): Promise<void> {
   if (prisma) {
     await prisma.$disconnect()
+    // @ts-ignore - allow resetting prisma to null
+    prisma = null
+    console.log('Prisma client disconnected and reset')
   }
 }
