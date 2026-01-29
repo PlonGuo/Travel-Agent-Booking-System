@@ -71,6 +71,7 @@ export interface SearchFilters {
   month?: string
   startDate?: string
   endDate?: string
+  isPaid?: boolean
 }
 
 // Form types

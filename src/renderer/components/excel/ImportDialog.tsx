@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { FileSpreadsheet, Upload, CheckCircle, AlertCircle } from 'lucide-react'
 import {
   Dialog,

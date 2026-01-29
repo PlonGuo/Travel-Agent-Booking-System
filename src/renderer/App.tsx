@@ -251,13 +251,16 @@ function App() {
   };
 
   // Calculate stats
-  const totalPending = customers.reduce((sum, c) => {
-    const customerPending =
-      c.transactions
-        ?.filter((t) => !t.isPaid)
-        .reduce((s, t) => s + t.totalAmount, 0) || 0;
-    return sum + customerPending;
-  }, 0);
+  // Note: Payment status is now tracked at OrderItem level, not Transaction level
+  // const totalPending = customers.reduce((sum, c) => {
+  //   const customerPending =
+  //     c.transactions
+  //       ?.reduce((s, t) => {
+  //         const unpaidItems = t.orderItems?.filter(item => !item.isPaid) || [];
+  //         return s + unpaidItems.reduce((sum, item) => sum + item.amount, 0);
+  //       }, 0) || 0;
+  //   return sum + customerPending;
+  // }, 0);
 
   if (categoriesLoading) {
     return (

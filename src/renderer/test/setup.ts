@@ -12,7 +12,11 @@ global.window = global.window || {}
 // @ts-ignore
 global.window.api = {
   // Mock IPC methods here as needed for tests
-  getCustomers: async () => [],
-  createCustomer: async () => ({ id: 'test-id' }),
+  customers: {
+    getByCategory: async () => [],
+    create: async () => ({ id: 'test-id' }),
+    update: async () => ({ id: 'test-id' }),
+    delete: async () => {},
+  },
   // Add more mocks as needed
 }

@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Pencil, Trash2, Plus, Check, X } from 'lucide-react'
+import { useState } from 'react'
+import { Pencil, Trash2, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TransactionForm } from './TransactionForm'
 import { OrderItemRow } from '@/components/order-item/OrderItemRow'
@@ -26,7 +26,7 @@ interface TransactionCardProps {
 
 export function TransactionCard({
   transaction,
-  customerId,
+  customerId: _customerId,
   onUpdateTransaction,
   onDeleteTransaction,
   onCreateOrderItem,

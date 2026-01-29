@@ -19,7 +19,7 @@ export function ReconciliationPage() {
     availableMonths,
     companies,
     orderItems,
-    loadingMonths,
+    loadingMonths: _loadingMonths,
     loadingCompanies,
     loadingItems,
     fetchAvailableMonths,

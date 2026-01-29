@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronDown, Pencil, Trash2, Plus, MessageSquare } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronDown, Plus, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { TransactionCard } from '@/components/transaction/TransactionCard';
 import { TransactionForm } from '@/components/transaction/TransactionForm';
 import { CustomerForm } from './CustomerForm';

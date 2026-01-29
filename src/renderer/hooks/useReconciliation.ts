@@ -45,7 +45,7 @@ export function useReconciliation() {
       setLoadingItems(true)
       setError(null)
       const data = await window.api.reconciliation.getOrderItems(month, invoiceCompany)
-      setOrderItems(data)
+      setOrderItems(data as ReconciliationOrderItem[])
     } catch (err) {
       console.error('Error fetching order items:', err)
       setError(err instanceof Error ? err.message : '加载订单明细失败')

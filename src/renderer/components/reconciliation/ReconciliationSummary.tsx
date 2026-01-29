@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button'
-import { Download, FileSpreadsheet, Loader2 } from 'lucide-react'
+import { FileSpreadsheet, Loader2 } from 'lucide-react'
 
 interface ReconciliationSummaryProps {
   totalAmount: number
