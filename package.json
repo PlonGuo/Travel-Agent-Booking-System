@@ -1,6 +1,6 @@
 {
   "name": "travel-agent-app",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Desktop app for travel booking agent to track customer payments",
   "main": "./out/main/index.js",
   "author": "Your Name",
@@ -104,7 +104,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "build/Travel-app-icon.png"
