@@ -12,9 +12,8 @@ export function registerTransactionHandlers() {
       _,
       data: {
         customerId: string
-        month: string
+        totalAmount?: number
         profit?: number
-        isPaid?: boolean
         comment?: string
       }
     ) => {
@@ -28,9 +27,7 @@ export function registerTransactionHandlers() {
       _,
       id: string,
       data: {
-        month?: string
-        profit?: number
-        isPaid?: boolean
+        totalAmount?: number
         comment?: string
       }
     ) => {

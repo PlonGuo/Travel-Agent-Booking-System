@@ -2,11 +2,28 @@ import { useState, useCallback } from 'react'
 import type { ReconciliationOrderItem } from '@/types'
 
 export function useReconciliation() {
+  const [availableMonths, setAvailableMonths] = useState<string[]>([])
   const [companies, setCompanies] = useState<string[]>([])
   const [orderItems, setOrderItems] = useState<ReconciliationOrderItem[]>([])
+  const [loadingMonths, setLoadingMonths] = useState(false)
   const [loadingCompanies, setLoadingCompanies] = useState(false)
   const [loadingItems, setLoadingItems] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const fetchAvailableMonths = useCallback(async () => {
+    try {
+      setLoadingMonths(true)
+      setError(null)
+      const data = await window.api.reconciliation.getAvailableMonths()
+      setAvailableMonths(data)
+    } catch (err) {
+      console.error('Error fetching available months:', err)
+      setError(err instanceof Error ? err.message : '加载可用月份失败')
+      setAvailableMonths([])
+    } finally {
+      setLoadingMonths(false)
+    }
+  }, [])
 
   const fetchCompanies = useCallback(async (month: string) => {
     try {
@@ -55,11 +72,14 @@ export function useReconciliation() {
   }, [])
 
   return {
+    availableMonths,
     companies,
     orderItems,
+    loadingMonths,
     loadingCompanies,
     loadingItems,
     error,
+    fetchAvailableMonths,
     fetchCompanies,
     fetchOrderItems,
     exportToExcel,

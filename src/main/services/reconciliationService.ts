@@ -1,6 +1,22 @@
 import { getPrismaClient } from '../database'
 
 export const reconciliationService = {
+  // Get all available months from categories (format: YYYY-MM)
+  async getAvailableMonths(): Promise<string[]> {
+    const prisma = getPrismaClient()
+
+    const categories = await prisma.category.findMany({
+      select: { name: true },
+      orderBy: { name: 'desc' }
+    })
+
+    // Filter categories that match YYYY-MM format
+    return categories
+      .map((c) => c.name)
+      .filter((name) => /^\d{4}-\d{2}$/.test(name))
+      .sort((a, b) => b.localeCompare(a)) // DESC order
+  },
+
   // Get unique invoice companies for a given month
   async getInvoiceCompanies(month: string): Promise<string[]> {
     const prisma = getPrismaClient()
@@ -8,7 +24,13 @@ export const reconciliationService = {
     const items = await prisma.orderItem.findMany({
       where: {
         invoiceCompany: { not: null },
-        transaction: { month }
+        transaction: {
+          customer: {
+            category: {
+              name: month
+            }
+          }
+        }
       },
       select: { invoiceCompany: true },
       distinct: ['invoiceCompany']
@@ -27,7 +49,13 @@ export const reconciliationService = {
     const items = await prisma.orderItem.findMany({
       where: {
         invoiceCompany,
-        transaction: { month }
+        transaction: {
+          customer: {
+            category: {
+              name: month
+            }
+          }
+        }
       },
       include: {
         transaction: {
@@ -50,7 +78,8 @@ export const reconciliationService = {
       amount: item.amount,
       date: item.date,
       comment: item.comment,
-      customerName: item.transaction.customer.name
+      customerName: item.transaction.customer.name,
+      isPaid: item.isPaid
     }))
   }
 }

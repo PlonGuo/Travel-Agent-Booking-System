@@ -28,10 +28,8 @@ export interface Customer {
 export interface Transaction {
   id: string
   customerId: string
-  month: string
   totalAmount: number
   profit: number
-  isPaid: boolean
   comment?: string
   createdAt: Date
   updatedAt: Date
@@ -48,6 +46,7 @@ export interface OrderItem {
   invoiceCompany?: string // 开票公司
   date?: string
   comment?: string
+  isPaid: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -65,13 +64,11 @@ export interface SearchResult {
   customerPhone?: string
   balance?: number
   orderItem?: OrderItem
-  transactionMonth?: string
 }
 
 export interface SearchFilters {
   categoryId?: string
   month?: string
-  isPaid?: boolean
   startDate?: string
   endDate?: string
 }
@@ -83,15 +80,11 @@ export interface CategoryFormData {
 
 export interface CustomerFormData {
   name: string
-  source?: string
-  invoiceCompany?: string
   comment?: string
 }
 
 export interface TransactionFormData {
-  month: string
-  profit: number
-  isPaid: boolean
+  totalAmount: number
   comment?: string
 }
 
@@ -103,6 +96,7 @@ export interface OrderItemFormData {
   invoiceCompany?: string // 开票公司
   date?: string
   comment?: string
+  isPaid?: boolean
 }
 
 // Reconciliation types
@@ -115,4 +109,5 @@ export interface ReconciliationOrderItem {
   date?: string
   comment?: string
   customerName: string
+  isPaid: boolean
 }

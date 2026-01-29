@@ -18,7 +18,8 @@
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:studio": "echo '🔧 Prisma Studio starting on http://localhost:5555' && prisma studio --port 5555",
-    "prisma:seed": "tsx prisma/seed.ts"
+    "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:migrate-payment": "tsx prisma/migrate-payment-status.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

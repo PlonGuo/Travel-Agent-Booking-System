@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Pencil, Trash2, MessageSquare, Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -43,6 +44,7 @@ export function OrderItemRow({ orderItem, onUpdate, onDelete }: OrderItemRowProp
     ticketNumber: orderItem.ticketNumber || '',
     amount: orderItem.amount,
     invoiceCompany: orderItem.invoiceCompany || '',
+    isPaid: orderItem.isPaid ?? false
   })
 
   const handleSave = async () => {
@@ -57,8 +59,14 @@ export function OrderItemRow({ orderItem, onUpdate, onDelete }: OrderItemRowProp
       ticketNumber: orderItem.ticketNumber || '',
       amount: orderItem.amount,
       invoiceCompany: orderItem.invoiceCompany || '',
+      isPaid: orderItem.isPaid ?? false
     })
     setIsEditing(false)
+  }
+
+  const handleTogglePaid = async () => {
+    await window.api.orderItems.togglePayment(orderItem.id)
+    await onUpdate(orderItem.id, { isPaid: !(orderItem.isPaid ?? false) })
   }
 
   const handleDelete = async () => {
@@ -131,6 +139,14 @@ export function OrderItemRow({ orderItem, onUpdate, onDelete }: OrderItemRowProp
             placeholder="开票公司"
           />
         </td>
+        <td className="py-2 px-2 text-center">
+          <input
+            type="checkbox"
+            checked={editData.isPaid}
+            onChange={(e) => setEditData({ ...editData, isPaid: e.target.checked })}
+            className="h-4 w-4 rounded border-gray-300"
+          />
+        </td>
         <td className="py-2 px-2"></td>
         <td className="py-2 px-2">
           <div className="flex items-center justify-center gap-1">
@@ -163,6 +179,15 @@ export function OrderItemRow({ orderItem, onUpdate, onDelete }: OrderItemRowProp
         <td className="py-2 px-2 text-muted-foreground">{orderItem.ticketNumber || '-'}</td>
         <td className="py-2 px-2 text-right font-medium">¥{orderItem.amount.toLocaleString()}</td>
         <td className="py-2 px-2 text-muted-foreground">{orderItem.invoiceCompany || '-'}</td>
+        <td className="py-2 px-2 text-center">
+          <Badge
+            variant={orderItem.isPaid ? 'success' : 'warning'}
+            className="cursor-pointer text-xs"
+            onClick={handleTogglePaid}
+          >
+            {orderItem.isPaid ? '已付' : '未付'}
+          </Badge>
+        </td>
         <td className="py-2 px-2 text-center">
           <CommentPopover
             comment={orderItem.comment}

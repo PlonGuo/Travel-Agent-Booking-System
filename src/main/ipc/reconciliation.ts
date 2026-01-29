@@ -3,6 +3,10 @@ import { reconciliationService } from '../services/reconciliationService'
 import { exportReconciliation } from '../services/excelService'
 
 export function registerReconciliationHandlers() {
+  ipcMain.handle('reconciliation:getAvailableMonths', async () => {
+    return await reconciliationService.getAvailableMonths()
+  })
+
   ipcMain.handle('reconciliation:getCompanies', async (_, month: string) => {
     return await reconciliationService.getInvoiceCompanies(month)
   })

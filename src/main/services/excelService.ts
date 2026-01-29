@@ -268,10 +268,8 @@ export async function importFromExcel(
           data: {
             id: uuidv4(),
             customerId: customer.id,
-            month: monthStr,
             totalAmount: parsed.totalAmount,
             profit: parsed.profit,
-            isPaid: false,
             updatedAt: new Date()
           }
         })
@@ -569,7 +567,7 @@ export async function exportReconciliation(
     const rows: (string | number | null)[][] = []
 
     // Header row
-    rows.push(['客户', '类型', '行程', '票号', '金额', '日期'])
+    rows.push(['客户', '类型', '行程', '票号', '金额', '日期', '付款状态'])
 
     // Data rows
     const typeLabels: Record<string, string> = {
@@ -588,14 +586,16 @@ export async function exportReconciliation(
         item.route,
         item.ticketNumber,
         item.amount,
-        item.date
+        item.date,
+        item.isPaid ? '已付' : '未付'
       ])
     }
 
-    // Add total row
-    const totalAmount = items.reduce((sum, item) => sum + item.amount, 0)
+    // Add total row - only sum unpaid items
+    const unpaidItems = items.filter(item => !item.isPaid)
+    const totalAmount = unpaidItems.reduce((sum, item) => sum + item.amount, 0)
     rows.push([])
-    rows.push(['', '', '', '合计', totalAmount, ''])
+    rows.push(['', '', '', '未付合计', totalAmount, '', ''])
 
     // Create worksheet
     const worksheet = XLSX.utils.aoa_to_sheet(rows)
@@ -607,7 +607,8 @@ export async function exportReconciliation(
       { wch: 25 }, // 行程
       { wch: 20 }, // 票号
       { wch: 12 }, // 金额
-      { wch: 12 } // 日期
+      { wch: 12 }, // 日期
+      { wch: 10 } // 付款状态
     ]
 
     // Add sheet to workbook

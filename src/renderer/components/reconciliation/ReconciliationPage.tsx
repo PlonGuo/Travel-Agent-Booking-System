@@ -16,10 +16,13 @@ export function ReconciliationPage() {
   const [exporting, setExporting] = useState(false)
 
   const {
+    availableMonths,
     companies,
     orderItems,
+    loadingMonths,
     loadingCompanies,
     loadingItems,
+    fetchAvailableMonths,
     fetchCompanies,
     fetchOrderItems,
     exportToExcel,
@@ -28,6 +31,21 @@ export function ReconciliationPage() {
 
   // Format month string as YYYY-MM
   const monthString = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`
+
+  // Fetch available months on mount
+  useEffect(() => {
+    fetchAvailableMonths()
+  }, [fetchAvailableMonths])
+
+  // Auto-select first available month if current selection doesn't exist
+  useEffect(() => {
+    if (availableMonths.length > 0 && !availableMonths.includes(monthString)) {
+      const firstMonth = availableMonths[0]
+      const [year, month] = firstMonth.split('-')
+      setSelectedYear(parseInt(year))
+      setSelectedMonth(parseInt(month))
+    }
+  }, [availableMonths, monthString])
 
   // Fetch companies when month changes
   useEffect(() => {
@@ -54,7 +72,9 @@ export function ReconciliationPage() {
     }
   }, [monthString, selectedCompany, exportToExcel])
 
-  const totalAmount = orderItems.reduce((sum, item) => sum + item.amount, 0)
+  // Calculate total amount from unpaid items only
+  const unpaidItems = orderItems.filter(item => !item.isPaid)
+  const totalAmount = unpaidItems.reduce((sum, item) => sum + item.amount, 0)
 
   return (
     <main className="w-full max-w-6xl mx-auto px-6 py-8">
@@ -76,6 +96,7 @@ export function ReconciliationPage() {
           selectedMonth={selectedMonth}
           onYearChange={setSelectedYear}
           onMonthChange={setSelectedMonth}
+          availableMonths={availableMonths}
         />
       </div>
 
@@ -105,7 +126,8 @@ export function ReconciliationPage() {
       {selectedCompany && orderItems.length > 0 && (
         <ReconciliationSummary
           totalAmount={totalAmount}
-          itemCount={orderItems.length}
+          itemCount={unpaidItems.length}
+          totalItems={orderItems.length}
           companyName={selectedCompany}
           month={monthString}
           onExport={handleExport}

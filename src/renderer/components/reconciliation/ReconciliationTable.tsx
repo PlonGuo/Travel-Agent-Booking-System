@@ -1,4 +1,5 @@
 import { Plane, Hotel, Shield, Train, FileCheck, Package, Loader2 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import type { ReconciliationOrderItem } from '@/types'
 
 interface ReconciliationTableProps {
@@ -53,13 +54,16 @@ export function ReconciliationTable({ orderItems, loading }: ReconciliationTable
             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">票号</th>
             <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">金额</th>
             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">日期</th>
+            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">付款状态</th>
           </tr>
         </thead>
         <tbody>
           {orderItems.map((item) => (
             <tr
               key={item.id}
-              className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+              className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                item.isPaid ? 'bg-gray-200' : ''
+              }`}
             >
               <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.customerName}</td>
               <td className="px-4 py-3">
@@ -78,6 +82,11 @@ export function ReconciliationTable({ orderItems, loading }: ReconciliationTable
                 ¥{item.amount.toLocaleString('zh-CN', { minimumFractionDigits: 2 })}
               </td>
               <td className="px-4 py-3 text-sm text-gray-600">{item.date || '-'}</td>
+              <td className="px-4 py-3 text-center">
+                <Badge variant={item.isPaid ? 'success' : 'warning'} className="text-xs">
+                  {item.isPaid ? '已付' : '未付'}
+                </Badge>
+              </td>
             </tr>
           ))}
         </tbody>

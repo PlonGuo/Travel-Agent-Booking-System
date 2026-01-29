@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { Pencil, Trash2, Plus, Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { TransactionForm } from './TransactionForm'
 import { OrderItemRow } from '@/components/order-item/OrderItemRow'
 import { OrderItemForm } from '@/components/order-item/OrderItemForm'
@@ -53,19 +52,9 @@ export function TransactionCard({
     }
   }
 
-  const handleTogglePaid = async () => {
-    await onUpdateTransaction(transaction.id, { isPaid: !transaction.isPaid })
-  }
-
   const handleCreateOrderItem = async (data: OrderItemFormData) => {
     await onCreateOrderItem(transaction.id, data)
     setIsAddingOrderItem(false)
-  }
-
-  // Format month display
-  const formatMonth = (month: string) => {
-    const [year, m] = month.split('-')
-    return `${year}年${parseInt(m)}月`
   }
 
   // Calculate total payable amount from all order items
@@ -74,19 +63,9 @@ export function TransactionCard({
   return (
     <>
       <div className="bg-white rounded-xl border overflow-hidden">
-        {/* Month Header */}
+        {/* Transaction Header */}
         <div className="bg-blue-50 px-4 py-3 flex items-center justify-between border-b border-blue-100">
-          <div className="flex items-center gap-3">
-            <span className="text-lg font-bold text-blue-900">{formatMonth(transaction.month)}</span>
-            <Badge
-              variant={transaction.isPaid ? 'success' : 'warning'}
-              className="cursor-pointer"
-              onClick={handleTogglePaid}
-            >
-              {transaction.isPaid ? '已付' : '未付'}
-            </Badge>
-          </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 ml-auto">
             <div className="text-right">
               <span className="text-sm text-muted-foreground mr-2">总应付:</span>
               <span className="font-bold text-lg text-orange-600">¥{totalPayable.toLocaleString()}</span>
@@ -131,6 +110,7 @@ export function TransactionCard({
                   <th className="text-left py-2 px-2 w-32">票号</th>
                   <th className="text-right py-2 px-2 w-24">应付</th>
                   <th className="text-left py-2 px-2 w-24">开票公司</th>
+                  <th className="text-center py-2 px-2 w-16">付款</th>
                   <th className="text-center py-2 px-2 w-20">备注</th>
                   <th className="text-center py-2 px-2 w-20">操作</th>
                 </tr>
@@ -194,9 +174,9 @@ export function TransactionCard({
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>删除月份</DialogTitle>
+            <DialogTitle>删除交易</DialogTitle>
             <DialogDescription>
-              确定要删除 "{formatMonth(transaction.month)}" 的记录吗？该操作将同时删除所有订单项目，且无法恢复。
+              确定要删除此交易记录吗？该操作将同时删除所有订单项目，且无法恢复。
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

@@ -15,6 +15,7 @@ export function registerOrderItemHandlers() {
         invoiceCompany?: string
         date?: string
         comment?: string
+        isPaid?: boolean
       }
     ) => {
       return await orderItemService.create(data)
@@ -34,6 +35,7 @@ export function registerOrderItemHandlers() {
         invoiceCompany?: string
         date?: string
         comment?: string
+        isPaid?: boolean
       }
     ) => {
       return await orderItemService.update(id, data)
@@ -42,5 +44,9 @@ export function registerOrderItemHandlers() {
 
   ipcMain.handle('orderItems:delete', async (_, id: string) => {
     return await orderItemService.delete(id)
+  })
+
+  ipcMain.handle('orderItems:togglePayment', async (_, id: string) => {
+    return await orderItemService.togglePaymentStatus(id)
   })
 }

@@ -23,8 +23,6 @@ interface CustomerFormProps {
 export function CustomerForm({ isOpen, onClose, onSubmit, customer }: CustomerFormProps) {
   const [formData, setFormData] = useState<CustomerFormData>({
     name: '',
-    source: '',
-    invoiceCompany: '',
     comment: '',
   })
   const [isLoading, setIsLoading] = useState(false)
@@ -33,15 +31,11 @@ export function CustomerForm({ isOpen, onClose, onSubmit, customer }: CustomerFo
     if (customer) {
       setFormData({
         name: customer.name,
-        source: customer.source || '',
-        invoiceCompany: customer.invoiceCompany || '',
         comment: customer.comment || '',
       })
     } else {
       setFormData({
         name: '',
-        source: '',
-        invoiceCompany: '',
         comment: '',
       })
     }
@@ -80,26 +74,6 @@ export function CustomerForm({ isOpen, onClose, onSubmit, customer }: CustomerFo
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="请输入客户名称"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="source">客户来源</Label>
-              <Input
-                id="source"
-                value={formData.source}
-                onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                placeholder="例如：军分区"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="invoiceCompany">开票公司</Label>
-              <Input
-                id="invoiceCompany"
-                value={formData.invoiceCompany}
-                onChange={(e) => setFormData({ ...formData, invoiceCompany: e.target.value })}
-                placeholder="请输入开票公司名称"
               />
             </div>
 

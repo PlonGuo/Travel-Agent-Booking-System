@@ -1,7 +1,7 @@
 import { getPrismaClient } from '../database'
 
 export const transactionService = {
-  // Get transactions by customer grouped by month with order items
+  // Get transactions by customer with order items
   async getByCustomer(customerId: string) {
     const prisma = getPrismaClient()
     return await prisma.transaction.findMany({
@@ -13,30 +13,26 @@ export const transactionService = {
           }
         }
       },
-      orderBy: [
-        { month: 'desc' },
-        { createdAt: 'desc' }
-      ]
+      orderBy: {
+        createdAt: 'desc'
+      }
     })
   },
 
   // Create transaction
   async create(data: {
     customerId: string
-    month: string
+    totalAmount?: number
     profit?: number
-    isPaid?: boolean
     comment?: string
   }) {
     const prisma = getPrismaClient()
     return await prisma.transaction.create({
       data: {
         customerId: data.customerId,
-        month: data.month,
+        totalAmount: data.totalAmount ?? 0,
         profit: data.profit ?? 0,
-        isPaid: data.isPaid ?? false,
-        comment: data.comment,
-        totalAmount: 0
+        comment: data.comment
       },
       include: {
         orderItems: true
@@ -44,21 +40,26 @@ export const transactionService = {
     })
   },
 
-  // Update transaction (profit, paid status)
+  // Update transaction (totalAmount, comment)
   async update(
     id: string,
     data: {
-      month?: string
-      profit?: number
-      isPaid?: boolean
+      totalAmount?: number
       comment?: string
     }
   ) {
     const prisma = getPrismaClient()
-    return await prisma.transaction.update({
+    const updated = await prisma.transaction.update({
       where: { id },
       data
     })
+
+    // Recalculate profit if totalAmount changed
+    if (data.totalAmount !== undefined) {
+      await this.recalculateProfit(id)
+    }
+
+    return updated
   },
 
   // Delete transaction (cascade deletes order items)
@@ -69,8 +70,8 @@ export const transactionService = {
     })
   },
 
-  // Recalculate total amount for a transaction
-  async recalculateTotal(transactionId: string) {
+  // Recalculate profit for a transaction (profit = totalAmount - sum of order items)
+  async recalculateProfit(transactionId: string) {
     const prisma = getPrismaClient()
     const transaction = await prisma.transaction.findUnique({
       where: { id: transactionId },
@@ -83,11 +84,12 @@ export const transactionService = {
       throw new Error('Transaction not found')
     }
 
-    const totalAmount = transaction.orderItems.reduce((sum, item) => sum + item.amount, 0)
+    const totalPayable = transaction.orderItems.reduce((sum, item) => sum + item.amount, 0)
+    const profit = transaction.totalAmount - totalPayable
 
     return await prisma.transaction.update({
       where: { id: transactionId },
-      data: { totalAmount }
+      data: { profit }
     })
   }
 }

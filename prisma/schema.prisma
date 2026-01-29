@@ -37,22 +37,19 @@ model Customer {
   @@index([name])
 }
 
-// Transaction (Order Group by month)
+// Transaction (Order Group)
 model Transaction {
   id          String      @id @default(uuid())
   customerId  String
   customer    Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  month       String
   totalAmount Float       @default(0)
   profit      Float       @default(0)
-  isPaid      Boolean     @default(false)
   comment     String?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   orderItems  OrderItem[]
 
   @@index([customerId])
-  @@index([month])
 }
 
 // Order Item (individual entry)
@@ -67,6 +64,7 @@ model OrderItem {
   invoiceCompany String?     // 开票公司
   date           String?
   comment        String?
+  isPaid         Boolean     @default(false)
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
@@ -74,4 +72,5 @@ model OrderItem {
   @@index([route])
   @@index([ticketNumber])
   @@index([invoiceCompany])
+  @@index([isPaid])
 }

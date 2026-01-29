@@ -22,9 +22,15 @@ export const customerService = {
     return customers.map((customer) => {
       const totalAmount = customer.transactions.reduce((sum, t) => sum + t.totalAmount, 0)
       const profit = customer.transactions.reduce((sum, t) => sum + t.profit, 0)
-      const pending = customer.transactions
-        .filter((t) => !t.isPaid)
-        .reduce((sum, t) => sum + t.totalAmount, 0)
+      // Calculate pending from unpaid order items, not transactions
+      const pending = customer.transactions.reduce(
+        (sum, t) =>
+          sum +
+          (t.orderItems
+            .filter((item) => !item.isPaid)
+            .reduce((itemSum, item) => itemSum + item.amount, 0)),
+        0
+      )
 
       return {
         ...customer,

@@ -30,17 +30,14 @@ export interface ElectronAPI {
     getByCustomer: (customerId: string) => Promise<any[]>
     create: (data: {
       customerId: string
-      month: string
+      totalAmount?: number
       profit?: number
-      isPaid?: boolean
       comment?: string
     }) => Promise<any>
     update: (
       id: string,
       data: {
-        month?: string
-        profit?: number
-        isPaid?: boolean
+        totalAmount?: number
         comment?: string
       }
     ) => Promise<any>
@@ -56,6 +53,7 @@ export interface ElectronAPI {
       invoiceCompany?: string
       date?: string
       comment?: string
+      isPaid?: boolean
     }) => Promise<any>
     update: (
       id: string,
@@ -67,9 +65,11 @@ export interface ElectronAPI {
         invoiceCompany?: string
         date?: string
         comment?: string
+        isPaid?: boolean
       }
     ) => Promise<any>
     delete: (id: string) => Promise<any>
+    togglePayment: (id: string) => Promise<any>
   }
   search: {
     global: (
@@ -77,7 +77,6 @@ export interface ElectronAPI {
       filters?: {
         categoryId?: string
         month?: string
-        isPaid?: boolean
       }
     ) => Promise<any[]>
   }
@@ -95,6 +94,7 @@ export interface ElectronAPI {
     export: () => Promise<string | null>
   }
   reconciliation: {
+    getAvailableMonths: () => Promise<string[]>
     getCompanies: (month: string) => Promise<string[]>
     getOrderItems: (month: string, invoiceCompany: string) => Promise<{
       id: string
@@ -105,6 +105,7 @@ export interface ElectronAPI {
       date: string | null
       comment: string | null
       customerName: string
+      isPaid: boolean
     }[]>
     export: (month: string, invoiceCompany: string) => Promise<string | null>
   }

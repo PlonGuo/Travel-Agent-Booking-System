@@ -41,17 +41,14 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.invoke('transactions:getByCustomer', customerId),
     create: (data: {
       customerId: string
-      month: string
+      totalAmount?: number
       profit?: number
-      isPaid?: boolean
       comment?: string
     }) => ipcRenderer.invoke('transactions:create', data),
     update: (
       id: string,
       data: {
-        month?: string
-        profit?: number
-        isPaid?: boolean
+        totalAmount?: number
         comment?: string
       }
     ) => ipcRenderer.invoke('transactions:update', id, data),
@@ -69,6 +66,7 @@ contextBridge.exposeInMainWorld('api', {
       invoiceCompany?: string
       date?: string
       comment?: string
+      isPaid?: boolean
     }) => ipcRenderer.invoke('orderItems:create', data),
     update: (
       id: string,
@@ -80,9 +78,11 @@ contextBridge.exposeInMainWorld('api', {
         invoiceCompany?: string
         date?: string
         comment?: string
+        isPaid?: boolean
       }
     ) => ipcRenderer.invoke('orderItems:update', id, data),
-    delete: (id: string) => ipcRenderer.invoke('orderItems:delete', id)
+    delete: (id: string) => ipcRenderer.invoke('orderItems:delete', id),
+    togglePayment: (id: string) => ipcRenderer.invoke('orderItems:togglePayment', id)
   },
 
   // Search
@@ -108,6 +108,7 @@ contextBridge.exposeInMainWorld('api', {
 
   // Reconciliation
   reconciliation: {
+    getAvailableMonths: () => ipcRenderer.invoke('reconciliation:getAvailableMonths'),
     getCompanies: (month: string) => ipcRenderer.invoke('reconciliation:getCompanies', month),
     getOrderItems: (month: string, invoiceCompany: string) =>
       ipcRenderer.invoke('reconciliation:getOrderItems', month, invoiceCompany),

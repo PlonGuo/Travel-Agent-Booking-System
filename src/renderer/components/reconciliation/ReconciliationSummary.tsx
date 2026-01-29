@@ -4,6 +4,7 @@ import { Download, FileSpreadsheet, Loader2 } from 'lucide-react'
 interface ReconciliationSummaryProps {
   totalAmount: number
   itemCount: number
+  totalItems: number
   companyName: string
   month: string
   onExport: () => void
@@ -13,6 +14,7 @@ interface ReconciliationSummaryProps {
 export function ReconciliationSummary({
   totalAmount,
   itemCount,
+  totalItems,
   companyName,
   month,
   onExport,
@@ -33,12 +35,12 @@ export function ReconciliationSummary({
         <div className="h-10 w-px bg-gray-200" />
         <div>
           <p className="text-sm text-gray-500">订单数量</p>
-          <p className="text-lg font-medium text-gray-700">{itemCount} 笔</p>
+          <p className="text-lg font-medium text-gray-700">{itemCount} / {totalItems} 笔</p>
         </div>
         <div className="h-10 w-px bg-gray-200" />
         <div>
-          <p className="text-sm text-gray-500">合计金额</p>
-          <p className="text-2xl font-bold text-primary">
+          <p className="text-sm text-gray-500">未付合计</p>
+          <p className="text-2xl font-bold text-red-600">
             ¥{totalAmount.toLocaleString('zh-CN', { minimumFractionDigits: 2 })}
           </p>
         </div>
