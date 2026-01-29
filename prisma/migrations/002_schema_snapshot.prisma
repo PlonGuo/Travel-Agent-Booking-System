@@ -1,0 +1,84 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "darwin-arm64", "darwin", "windows"]
+}
+
+// Category (Tab)
+model Category {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  order     Int        @default(0)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  customers Customer[]
+}
+
+// Customer
+model Customer {
+  id             String        @id @default(uuid())
+  categoryId     String
+  category       Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name           String
+  source         String?
+  invoiceCompany String?
+  comment        String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  transactions   Transaction[]
+
+  @@index([categoryId])
+  @@index([name])
+}
+
+// Transaction (Order Group)
+model Transaction {
+  id          String      @id @default(uuid())
+  customerId  String
+  customer    Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  totalAmount Float       @default(0)
+  profit      Float       @default(0)
+  comment     String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  orderItems  OrderItem[]
+
+  @@index([customerId])
+}
+
+// Order Item (individual entry)
+model OrderItem {
+  id             String      @id @default(uuid())
+  transactionId  String
+  transaction    Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  type           String      // flight/hotel/insurance/other
+  route          String
+  ticketNumber   String?
+  amount         Float
+  invoiceCompany String?     // 开票公司
+  date           String?
+  comment        String?
+  isPaid         Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([transactionId])
+  @@index([route])
+  @@index([ticketNumber])
+  @@index([invoiceCompany])
+  @@index([isPaid])
+}
+
+// Schema Version Tracking
+model SchemaVersion {
+  id        Int      @id @default(1)
+  version   Int      @unique
+  appliedAt DateTime @default(now())
+  name      String
+}

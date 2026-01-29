@@ -5,139 +5,20 @@ import fs from 'fs'
 
 let prisma: PrismaClient
 
-async function migrateDatabase(client: PrismaClient): Promise<void> {
-  console.log('Checking for schema migrations...')
-
-  // Migration: Add invoiceCompany column to OrderItem if it doesn't exist
-  try {
-    // Check if column exists by querying it
-    await client.$queryRawUnsafe(`SELECT "invoiceCompany" FROM "OrderItem" LIMIT 1`)
-    console.log('Migration: invoiceCompany column already exists')
-  } catch {
-    // Column doesn't exist, add it
-    console.log('Migration: Adding invoiceCompany column to OrderItem...')
-    await client.$executeRawUnsafe(`ALTER TABLE "OrderItem" ADD COLUMN "invoiceCompany" TEXT`)
-    await client.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "OrderItem_invoiceCompany_idx" ON "OrderItem"("invoiceCompany")`)
-    console.log('Migration: invoiceCompany column added successfully')
-  }
-}
-
 async function initializeDatabase(client: PrismaClient): Promise<void> {
   try {
     // Check if tables exist by trying to count categories
     await client.category.count()
     console.log('Database tables already exist')
-
-    // Run migrations for existing databases
-    await migrateDatabase(client)
   } catch (error) {
-    // Tables don't exist, create them
-    console.log('Creating database tables...')
+    // Tables don't exist - this is a fresh database
+    // Run all migrations from version 0 to current
+    console.log('Fresh database detected, running all migrations...')
 
-    await client.$executeRawUnsafe(`
-      CREATE TABLE IF NOT EXISTS "Category" (
-        "id" TEXT NOT NULL PRIMARY KEY,
-        "name" TEXT NOT NULL UNIQUE,
-        "order" INTEGER NOT NULL DEFAULT 0,
-        "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        "updatedAt" DATETIME NOT NULL
-      );
-    `)
+    const { runAllMigrations } = await import('./services/migrationService')
+    await runAllMigrations(client, { fromVersion: 0 })
 
-    await client.$executeRawUnsafe(`
-      CREATE TABLE IF NOT EXISTS "Customer" (
-        "id" TEXT NOT NULL PRIMARY KEY,
-        "categoryId" TEXT NOT NULL,
-        "name" TEXT NOT NULL,
-        "source" TEXT,
-        "invoiceCompany" TEXT,
-        "comment" TEXT,
-        "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        "updatedAt" DATETIME NOT NULL,
-        FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE CASCADE
-      );
-    `)
-
-    await client.$executeRawUnsafe(`
-      CREATE INDEX IF NOT EXISTS "Customer_categoryId_idx" ON "Customer"("categoryId");
-    `)
-
-    await client.$executeRawUnsafe(`
-      CREATE INDEX IF NOT EXISTS "Customer_name_idx" ON "Customer"("name");
-    `)
-
-    await client.$executeRawUnsafe(`
-      CREATE TABLE IF NOT EXISTS "Transaction" (
-        "id" TEXT NOT NULL PRIMARY KEY,
-        "customerId" TEXT NOT NULL,
-        "totalAmount" REAL NOT NULL DEFAULT 0,
-        "profit" REAL NOT NULL DEFAULT 0,
-        "comment" TEXT,
-        "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        "updatedAt" DATETIME NOT NULL,
-        FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE CASCADE
-      );
-    `)
-
-    await client.$executeRawUnsafe(`
-      CREATE INDEX IF NOT EXISTS "Transaction_customerId_idx" ON "Transaction"("customerId");
-    `)
-
-    await client.$executeRawUnsafe(`
-      CREATE TABLE IF NOT EXISTS "OrderItem" (
-        "id" TEXT NOT NULL PRIMARY KEY,
-        "transactionId" TEXT NOT NULL,
-        "type" TEXT NOT NULL,
-        "route" TEXT NOT NULL,
-        "ticketNumber" TEXT,
-        "amount" REAL NOT NULL,
-        "invoiceCompany" TEXT,
-        "date" TEXT,
-        "comment" TEXT,
-        "isPaid" INTEGER NOT NULL DEFAULT 0,
-        "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        "updatedAt" DATETIME NOT NULL,
-        FOREIGN KEY ("transactionId") REFERENCES "Transaction"("id") ON DELETE CASCADE
-      );
-    `)
-
-    await client.$executeRawUnsafe(`
-      CREATE INDEX IF NOT EXISTS "OrderItem_transactionId_idx" ON "OrderItem"("transactionId");
-    `)
-
-    await client.$executeRawUnsafe(`
-      CREATE INDEX IF NOT EXISTS "OrderItem_route_idx" ON "OrderItem"("route");
-    `)
-
-    await client.$executeRawUnsafe(`
-      CREATE INDEX IF NOT EXISTS "OrderItem_ticketNumber_idx" ON "OrderItem"("ticketNumber");
-    `)
-
-    await client.$executeRawUnsafe(`
-      CREATE INDEX IF NOT EXISTS "OrderItem_invoiceCompany_idx" ON "OrderItem"("invoiceCompany");
-    `)
-
-    await client.$executeRawUnsafe(`
-      CREATE INDEX IF NOT EXISTS "OrderItem_isPaid_idx" ON "OrderItem"("isPaid");
-    `)
-
-    // Create SchemaVersion table
-    await client.$executeRawUnsafe(`
-      CREATE TABLE IF NOT EXISTS "SchemaVersion" (
-        "id" INTEGER NOT NULL PRIMARY KEY DEFAULT 1,
-        "version" INTEGER NOT NULL UNIQUE,
-        "appliedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        "name" TEXT NOT NULL
-      );
-    `)
-
-    // Insert initial schema version
-    await client.$executeRawUnsafe(`
-      INSERT OR IGNORE INTO "SchemaVersion" ("id", "version", "name", "appliedAt")
-      VALUES (1, 2, 'Initial schema with OrderItem.isPaid', CURRENT_TIMESTAMP);
-    `)
-
-    console.log('Database tables created successfully with schema version 2')
+    console.log('Database initialization complete via migration system')
   }
 }
 

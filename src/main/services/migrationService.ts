@@ -2,50 +2,60 @@ import { app, dialog } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
 import { getPrismaClient } from '../database'
+import { migrations as registeredMigrations, Migration, ProgressCallback } from '../migrations'
 
 // Current schema version - increment this when making schema changes
 export const CURRENT_SCHEMA_VERSION = 2
 
-// Migration definitions
-export interface Migration {
-  version: number
-  name: string
-  up: (prisma: any) => Promise<void>
-}
+// Re-export Migration type for compatibility
+export type { Migration, ProgressCallback }
 
-// Define all migrations here
-export const migrations: Migration[] = [
-  {
-    version: 1,
-    name: 'Initial schema',
-    up: async (prisma) => {
-      // Initial schema - no migration needed
-      console.log('Schema version 1: Initial schema')
-    }
-  },
-  {
-    version: 2,
-    name: 'Move payment tracking to OrderItem level',
-    up: async (prisma) => {
-      console.log('Migrating to version 2: Moving isPaid from Transaction to OrderItem')
+// Get migrations from the registry
+const migrations = registeredMigrations
 
-      // Check if OrderItem table has isPaid column
+/**
+ * Execute SQL from a migration file
+ */
+async function executeSqlMigration(sqlFile: string, prisma: any): Promise<void> {
+  // Resolve path relative to project root
+  let sqlPath: string
+
+  if (app.isPackaged) {
+    // In production, resolve from app resources
+    sqlPath = path.join(process.resourcesPath, sqlFile)
+  } else {
+    // In development, resolve from project root
+    sqlPath = path.join(__dirname, '../../..', sqlFile)
+  }
+
+  if (!fs.existsSync(sqlPath)) {
+    throw new Error(`Migration SQL file not found: ${sqlPath}`)
+  }
+
+  console.log(`Executing SQL migration: ${sqlPath}`)
+
+  const sql = fs.readFileSync(sqlPath, 'utf8')
+
+  // Split SQL into individual statements (separated by semicolon)
+  const statements = sql
+    .split(';')
+    .map(s => s.trim())
+    .filter(s => s && !s.startsWith('--')) // Remove empty and comment-only statements
+
+  // Execute each statement
+  for (const statement of statements) {
+    if (statement) {
       try {
-        // Try to query with isPaid - if it exists, no migration needed
-        await prisma.orderItem.findFirst({ where: { isPaid: true } })
-        console.log('OrderItem.isPaid already exists, skipping data migration')
+        await prisma.$executeRawUnsafe(statement)
       } catch (error) {
-        // Column doesn't exist yet - this shouldn't happen if schema is pushed
-        console.log('OrderItem.isPaid does not exist - schema needs to be pushed first')
-        throw new Error('Schema not synchronized. Please run prisma db push first.')
+        console.error(`Error executing SQL statement: ${statement.substring(0, 100)}...`)
+        throw error
       }
-
-      // Note: The actual schema change (adding isPaid to OrderItem) is handled by prisma db push
-      // This migration just ensures data consistency
-      console.log('Migration to version 2 completed')
     }
   }
-]
+
+  console.log(`SQL migration completed: ${path.basename(sqlPath)}`)
+}
 
 /**
  * Get the database file path
@@ -130,11 +140,15 @@ export function deleteBackup(backupPath: string): void {
 /**
  * Run migrations to bring database to current version
  */
-export async function runMigrations(): Promise<{ success: boolean; error?: string }> {
+export async function runMigrations(
+  progress?: ProgressCallback
+): Promise<{ success: boolean; error?: string }> {
   const prisma = getPrismaClient()
   let backupPath: string | null = null
 
   try {
+    progress?.('正在备份数据库...', 5)
+
     // Backup database before migration
     backupPath = await backupDatabase()
 
@@ -143,43 +157,52 @@ export async function runMigrations(): Promise<{ success: boolean; error?: strin
     console.log(`Current schema version: ${currentVersion}`)
     console.log(`Target schema version: ${CURRENT_SCHEMA_VERSION}`)
 
-    // If version 0, we need to initialize the schema first
-    if (currentVersion === 0) {
-      console.log('Initializing schema version tracking...')
-
-      // Create SchemaVersion record for version 1 (initial schema)
-      try {
-        await prisma.schemaVersion.create({
-          data: {
-            version: 1,
-            name: 'Initial schema',
-            appliedAt: new Date()
-          }
-        })
-        console.log('Schema version 1 recorded')
-      } catch (error) {
-        console.log('Could not create SchemaVersion record - table may not exist yet')
-      }
-    }
+    progress?.('正在检查待执行的迁移...', 10)
 
     // Run all pending migrations
     const pendingMigrations = migrations.filter((m) => m.version > currentVersion)
 
-    for (const migration of pendingMigrations) {
+    if (pendingMigrations.length === 0) {
+      console.log('No pending migrations')
+      if (backupPath) {
+        deleteBackup(backupPath)
+      }
+      return { success: true }
+    }
+
+    console.log(`Found ${pendingMigrations.length} pending migrations`)
+
+    for (let i = 0; i < pendingMigrations.length; i++) {
+      const migration = pendingMigrations[i]
+      const progressPercent = 10 + ((i / pendingMigrations.length) * 80)
+
+      progress?.(`正在执行迁移 ${migration.version}: ${migration.name}...`, progressPercent)
       console.log(`Running migration ${migration.version}: ${migration.name}`)
 
       try {
-        // Run the migration
-        await migration.up(prisma)
+        // Execute SQL file if specified
+        if (migration.sqlFile) {
+          await executeSqlMigration(migration.sqlFile, prisma)
+        }
 
-        // Record the migration
-        await prisma.schemaVersion.create({
-          data: {
-            version: migration.version,
-            name: migration.name,
-            appliedAt: new Date()
-          }
+        // Run migration up function (for data transformations)
+        await migration.up(prisma, progress)
+
+        // Record the migration (if not already recorded by SQL)
+        // Check if version already recorded to avoid duplicate entry
+        const existingVersion = await prisma.schemaVersion.findUnique({
+          where: { version: migration.version }
         })
+
+        if (!existingVersion) {
+          await prisma.schemaVersion.create({
+            data: {
+              version: migration.version,
+              name: migration.name,
+              appliedAt: new Date()
+            }
+          })
+        }
 
         console.log(`Migration ${migration.version} completed successfully`)
       } catch (error) {
@@ -188,14 +211,20 @@ export async function runMigrations(): Promise<{ success: boolean; error?: strin
       }
     }
 
+    progress?.('正在清理备份文件...', 95)
+
     // Clean up backup after successful migration
     if (backupPath) {
       deleteBackup(backupPath)
     }
 
+    progress?.('迁移完成', 100)
+
     return { success: true }
   } catch (error) {
     console.error('Migration failed:', error)
+
+    progress?.('迁移失败，正在恢复备份...', 0)
 
     // Restore from backup
     if (backupPath && fs.existsSync(backupPath)) {
@@ -212,6 +241,40 @@ export async function runMigrations(): Promise<{ success: boolean; error?: strin
       error: error instanceof Error ? error.message : String(error)
     }
   }
+}
+
+/**
+ * Run all migrations from scratch (for fresh database initialization)
+ */
+export async function runAllMigrations(
+  prisma: any,
+  options?: { fromVersion?: number; progress?: boolean }
+): Promise<void> {
+  const fromVersion = options?.fromVersion ?? 0
+  const migrationsToRun = migrations.filter((m) => m.version > fromVersion)
+
+  console.log(`Running ${migrationsToRun.length} migrations from version ${fromVersion}`)
+
+  for (const migration of migrationsToRun) {
+    console.log(`Running migration ${migration.version}: ${migration.name}`)
+
+    try {
+      // Execute SQL file if specified
+      if (migration.sqlFile) {
+        await executeSqlMigration(migration.sqlFile, prisma)
+      }
+
+      // Run migration up function
+      await migration.up(prisma)
+
+      console.log(`Migration ${migration.version} completed`)
+    } catch (error) {
+      console.error(`Migration ${migration.version} failed:`, error)
+      throw error
+    }
+  }
+
+  console.log('All migrations completed successfully')
 }
 
 /**
@@ -262,10 +325,21 @@ export async function resetDatabase(): Promise<void> {
 }
 
 /**
+ * Check if pending migrations are all automatic (additive) or include manual changes
+ */
+export async function hasManualMigrations(): Promise<boolean> {
+  const currentVersion = await getCurrentVersion()
+  const pendingMigrations = migrations.filter((m) => m.version > currentVersion)
+
+  return pendingMigrations.some((m) => m.type === 'manual')
+}
+
+/**
  * Show migration dialog to user and handle their choice
  */
 export async function showMigrationDialog(): Promise<'migrate' | 'reset' | 'cancel'> {
   const currentVersion = await getCurrentVersion()
+  const isManual = await hasManualMigrations()
 
   // For first-time migration (version 0 or 1 to 2), show special warning
   if (currentVersion < 2) {
@@ -297,7 +371,31 @@ export async function showMigrationDialog(): Promise<'migrate' | 'reset' | 'canc
     }
   }
 
-  // For future migrations, show standard dialog with upgrade option
+  // For automatic migrations, show simpler confirmation
+  if (!isManual) {
+    const result = await dialog.showMessageBox({
+      type: 'info',
+      title: '数据库升级',
+      message: '检测到数据库需要升级',
+      detail:
+        '当前应用版本包含数据库结构更新。\n\n' +
+        '此次升级会自动保留您的所有数据。\n' +
+        '升级过程将在几秒钟内完成。\n\n' +
+        '点击"开始升级"继续。',
+      buttons: ['开始升级', '取消'],
+      defaultId: 0,
+      cancelId: 1
+    })
+
+    switch (result.response) {
+      case 0:
+        return 'migrate'
+      default:
+        return 'cancel'
+    }
+  }
+
+  // For manual migrations, show detailed dialog with all options
   const result = await dialog.showMessageBox({
     type: 'warning',
     title: '数据库升级',
@@ -305,6 +403,7 @@ export async function showMigrationDialog(): Promise<'migrate' | 'reset' | 'canc
     detail:
       '当前应用版本包含数据库结构更新。\n\n' +
       '• 升级：保留现有数据并更新数据库结构（推荐）\n' +
+      '  系统会自动创建备份，确保数据安全\n\n' +
       '• 重置：删除所有数据并创建新数据库\n' +
       '• 取消：退出应用',
     buttons: ['升级（推荐）', '重置数据库', '取消'],
@@ -342,8 +441,14 @@ export async function handleMigrationOnStartup(): Promise<boolean> {
 
     switch (choice) {
       case 'migrate': {
-        // Run migrations
-        const result = await runMigrations()
+        // Create a simple progress callback that logs to console
+        // In the future, this could show a progress window
+        const progress: ProgressCallback = (message: string, percent: number) => {
+          console.log(`Migration progress (${percent}%): ${message}`)
+        }
+
+        // Run migrations with progress tracking
+        const result = await runMigrations(progress)
 
         if (result.success) {
           await dialog.showMessageBox({

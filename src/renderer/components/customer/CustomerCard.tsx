@@ -141,8 +141,11 @@ export function CustomerCard({
             (sum, t) =>
               sum +
               (t.orderItems
-                ?.filter((item) => !item.isPaid)
-                .reduce((itemSum, item) => itemSum + item.amount, 0) || 0),
+                ?.reduce(
+                  (itemSum: number, item: { amount: number }) =>
+                    itemSum + item.amount,
+                  0,
+                ) || 0),
             0,
           ),
         }
@@ -247,7 +250,8 @@ export function CustomerCard({
                 onClick={() => setIsTransactionFormOpen(true)}
                 className="px-4 py-2 text-sm font-bold text-white bg-primary rounded-xl hover:bg-blue-700 transition-colors shadow-md shadow-primary/20 flex items-center gap-2"
               >
-                <Plus className="h-4 w-4" />+ 添加新交易
+                <Plus className="h-4 w-4" />
+                添加新交易
               </button>
             </div>
 
