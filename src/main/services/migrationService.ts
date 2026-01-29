@@ -238,6 +238,39 @@ export async function resetDatabase(): Promise<void> {
  * Show migration dialog to user and handle their choice
  */
 export async function showMigrationDialog(): Promise<'migrate' | 'reset' | 'cancel'> {
+  const currentVersion = await getCurrentVersion()
+
+  // For first-time migration (version 0 or 1 to 2), show special warning
+  if (currentVersion < 2) {
+    const result = await dialog.showMessageBox({
+      type: 'warning',
+      title: '重要：数据库升级',
+      message: '检测到数据库需要升级',
+      detail:
+        '⚠️ 重要提示：此次升级需要重置数据库\n\n' +
+        '建议操作步骤：\n' +
+        '1. 点击"取消"退出应用\n' +
+        '2. 启动旧版本应用\n' +
+        '3. 使用"导出"功能保存所有数据\n' +
+        '4. 重新启动新版本应用\n' +
+        '5. 选择"重置数据库"（推荐）\n' +
+        '6. 使用"导入"功能恢复数据\n\n' +
+        '如果您已经导出数据，可以选择"重置数据库"继续。\n' +
+        '如果您的数据不重要，也可以直接重置。',
+      buttons: ['重置数据库', '取消（返回导出数据）'],
+      defaultId: 1,
+      cancelId: 1
+    })
+
+    switch (result.response) {
+      case 0:
+        return 'reset'
+      default:
+        return 'cancel'
+    }
+  }
+
+  // For future migrations, show standard dialog with upgrade option
   const result = await dialog.showMessageBox({
     type: 'warning',
     title: '数据库升级',
