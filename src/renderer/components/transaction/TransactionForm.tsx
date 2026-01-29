@@ -25,6 +25,7 @@ export function TransactionForm({ isOpen, onClose, onSubmit, transaction }: Tran
     totalAmount: 0,
     comment: '',
   })
+  const [totalAmountInput, setTotalAmountInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
@@ -33,11 +34,13 @@ export function TransactionForm({ isOpen, onClose, onSubmit, transaction }: Tran
         totalAmount: transaction.totalAmount,
         comment: transaction.comment || '',
       })
+      setTotalAmountInput(transaction.totalAmount.toString())
     } else {
       setFormData({
         totalAmount: 0,
         comment: '',
       })
+      setTotalAmountInput('')
     }
   }, [transaction, isOpen])
 
@@ -81,8 +84,11 @@ export function TransactionForm({ isOpen, onClose, onSubmit, transaction }: Tran
                 id="totalAmount"
                 type="number"
                 step="0.01"
-                value={formData.totalAmount}
-                onChange={(e) => setFormData({ ...formData, totalAmount: parseFloat(e.target.value) || 0 })}
+                value={totalAmountInput}
+                onChange={(e) => {
+                  setTotalAmountInput(e.target.value)
+                  setFormData({ ...formData, totalAmount: parseFloat(e.target.value) || 0 })
+                }}
                 placeholder="请输入应收总额"
               />
             </div>

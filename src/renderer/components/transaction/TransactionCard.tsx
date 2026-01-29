@@ -1,9 +1,9 @@
-import { useState } from 'react'
-import { Pencil, Trash2, Plus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { TransactionForm } from './TransactionForm'
-import { OrderItemRow } from '@/components/order-item/OrderItemRow'
-import { OrderItemForm } from '@/components/order-item/OrderItemForm'
+import { useState } from 'react';
+import { Pencil, Trash2, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { TransactionForm } from './TransactionForm';
+import { OrderItemRow } from '@/components/order-item/OrderItemRow';
+import { OrderItemForm } from '@/components/order-item/OrderItemForm';
 import {
   Dialog,
   DialogContent,
@@ -11,17 +11,30 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import type { Transaction, TransactionFormData, OrderItemFormData } from '@/types'
+} from '@/components/ui/dialog';
+import type {
+  Transaction,
+  TransactionFormData,
+  OrderItemFormData,
+} from '@/types';
 
 interface TransactionCardProps {
-  transaction: Transaction
-  customerId: string
-  onUpdateTransaction: (id: string, data: Partial<TransactionFormData>) => Promise<void>
-  onDeleteTransaction: (id: string) => Promise<void>
-  onCreateOrderItem: (transactionId: string, data: OrderItemFormData) => Promise<void>
-  onUpdateOrderItem: (id: string, data: Partial<OrderItemFormData>) => Promise<void>
-  onDeleteOrderItem: (id: string) => Promise<void>
+  transaction: Transaction;
+  customerId: string;
+  onUpdateTransaction: (
+    id: string,
+    data: Partial<TransactionFormData>,
+  ) => Promise<void>;
+  onDeleteTransaction: (id: string) => Promise<void>;
+  onCreateOrderItem: (
+    transactionId: string,
+    data: OrderItemFormData,
+  ) => Promise<void>;
+  onUpdateOrderItem: (
+    id: string,
+    data: Partial<OrderItemFormData>,
+  ) => Promise<void>;
+  onDeleteOrderItem: (id: string) => Promise<void>;
 }
 
 export function TransactionCard({
@@ -33,32 +46,33 @@ export function TransactionCard({
   onUpdateOrderItem,
   onDeleteOrderItem,
 }: TransactionCardProps) {
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [isAddingOrderItem, setIsAddingOrderItem] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isAddingOrderItem, setIsAddingOrderItem] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleUpdateTransaction = async (data: TransactionFormData) => {
-    await onUpdateTransaction(transaction.id, data)
-  }
+    await onUpdateTransaction(transaction.id, data);
+  };
 
   const handleDeleteTransaction = async () => {
-    setIsDeleting(true)
+    setIsDeleting(true);
     try {
-      await onDeleteTransaction(transaction.id)
-      setIsDeleteDialogOpen(false)
+      await onDeleteTransaction(transaction.id);
+      setIsDeleteDialogOpen(false);
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
-  }
+  };
 
   const handleCreateOrderItem = async (data: OrderItemFormData) => {
-    await onCreateOrderItem(transaction.id, data)
-    setIsAddingOrderItem(false)
-  }
+    await onCreateOrderItem(transaction.id, data);
+    setIsAddingOrderItem(false);
+  };
 
   // Calculate total payable amount from all order items
-  const totalPayable = transaction.orderItems?.reduce((sum, item) => sum + item.amount, 0) || 0
+  const totalPayable =
+    transaction.orderItems?.reduce((sum, item) => sum + item.amount, 0) || 0;
 
   return (
     <>
@@ -67,16 +81,26 @@ export function TransactionCard({
         <div className="bg-blue-50 px-4 py-3 flex items-center justify-between border-b border-blue-100">
           <div className="flex items-center gap-4 ml-auto">
             <div className="text-right">
-              <span className="text-sm text-muted-foreground mr-2">总应付:</span>
-              <span className="font-bold text-lg text-orange-600">¥{totalPayable.toLocaleString()}</span>
+              <span className="text-sm text-muted-foreground mr-2">
+                总应付:
+              </span>
+              <span className="font-bold text-lg text-orange-600">
+                ¥{totalPayable.toLocaleString()}
+              </span>
             </div>
             <div className="text-right">
-              <span className="text-sm text-muted-foreground mr-2">合计:</span>
-              <span className="font-bold text-lg">¥{transaction.totalAmount.toLocaleString()}</span>
+              <span className="text-sm text-muted-foreground mr-2">
+                合计(应收):
+              </span>
+              <span className="font-bold text-lg">
+                ¥{transaction.totalAmount.toLocaleString()}
+              </span>
             </div>
             <div className="text-right">
               <span className="text-sm text-muted-foreground mr-2">利润:</span>
-              <span className="font-bold text-lg text-green-600">¥{transaction.profit.toLocaleString()}</span>
+              <span className="font-bold text-lg text-green-600">
+                ¥{transaction.profit.toLocaleString()}
+              </span>
             </div>
             <div className="flex items-center gap-1">
               <Button
@@ -101,7 +125,8 @@ export function TransactionCard({
 
         {/* Order Items Table */}
         <div className="p-4">
-          {(transaction.orderItems && transaction.orderItems.length > 0) || isAddingOrderItem ? (
+          {(transaction.orderItems && transaction.orderItems.length > 0) ||
+          isAddingOrderItem ? (
             <table className="w-full">
               <thead>
                 <tr className="text-xs text-muted-foreground border-b">
@@ -171,7 +196,10 @@ export function TransactionCard({
       />
 
       {/* Delete Transaction Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <Dialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>删除交易</DialogTitle>
@@ -180,15 +208,22 @@ export function TransactionCard({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
               取消
             </Button>
-            <Button variant="destructive" onClick={handleDeleteTransaction} disabled={isDeleting}>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteTransaction}
+              disabled={isDeleting}
+            >
               {isDeleting ? '删除中...' : '确认删除'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

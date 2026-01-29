@@ -139,12 +139,11 @@ export function CustomerCard({
           pending: transactions.reduce(
             (sum, t) =>
               sum +
-              (t.orderItems
-                ?.reduce(
-                  (itemSum: number, item: { amount: number }) =>
-                    itemSum + item.amount,
-                  0,
-                ) || 0),
+              (t.orderItems?.reduce(
+                (itemSum: number, item: { amount: number }) =>
+                  itemSum + item.amount,
+                0,
+              ) || 0),
             0,
           ),
         }
@@ -177,6 +176,18 @@ export function CustomerCard({
             {/* Stats - More compact and subtle */}
             <div className="flex items-center gap-8 ml-auto mr-6">
               <div className="text-right">
+                <p className="text-xs text-gray-400 font-medium mb-1">总应付</p>
+                <p
+                  className={`text-lg font-bold ${stats.pending > 0 ? 'text-red-500' : 'text-gray-300'}`}
+                >
+                  ¥
+                  {stats.pending.toLocaleString('zh-CN', {
+                    minimumFractionDigits: 2,
+                  })}
+                </p>
+              </div>
+
+              <div className="text-right">
                 <p className="text-xs text-gray-400 font-medium mb-1">
                   合计(应收)
                 </p>
@@ -192,17 +203,6 @@ export function CustomerCard({
                 <p className="text-lg font-bold text-green-500">
                   ¥
                   {stats.profit.toLocaleString('zh-CN', {
-                    minimumFractionDigits: 2,
-                  })}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-400 font-medium mb-1">总应付</p>
-                <p
-                  className={`text-lg font-bold ${stats.pending > 0 ? 'text-red-500' : 'text-gray-300'}`}
-                >
-                  ¥
-                  {stats.pending.toLocaleString('zh-CN', {
                     minimumFractionDigits: 2,
                   })}
                 </p>

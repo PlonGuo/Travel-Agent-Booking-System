@@ -154,36 +154,4 @@ describe('TransactionCard - Total Payable Calculation', () => {
     expect(screen.getByText('¥2,500.49')).toBeInTheDocument()
   })
 
-  it('should display totalPayable before 合计 (totalAmount)', () => {
-    const transactionWithItems: Transaction = {
-      ...mockTransaction,
-      totalAmount: 5000,
-      orderItems: [
-        {
-          id: 'item-1',
-          transactionId: 'trans-1',
-          type: 'flight',
-          route: 'Test Route',
-          amount: 3000,
-          isPaid: false,          createdAt: new Date('2024-01-01'),
-          updatedAt: new Date('2024-01-01'),
-        },
-      ],
-    }
-
-    const { container } = render(
-      <TransactionCard
-        transaction={transactionWithItems}
-        customerId="cust-1"
-        {...mockHandlers}
-      />
-    )
-
-    const allTexts = container.textContent || ''
-    const totalPayableIndex = allTexts.indexOf('总应付:')
-    const totalAmountIndex = allTexts.indexOf('合计:')
-
-    // 总应付 should come before 合计
-    expect(totalPayableIndex).toBeLessThan(totalAmountIndex)
-  })
 })

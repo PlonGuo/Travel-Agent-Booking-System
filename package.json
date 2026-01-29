@@ -1,6 +1,6 @@
 {
   "name": "travel-agent-app",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "Desktop app for travel booking agent to track customer payments",
   "main": "./out/main/index.js",
   "author": "Your Name",
